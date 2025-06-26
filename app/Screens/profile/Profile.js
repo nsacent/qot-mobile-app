@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react';
 import { View, Text, SafeAreaView, Image, TouchableOpacity, Share } from 'react-native'
 import { useTheme } from '@react-navigation/native'
 import { GlobalStyleSheet } from '../../constants/StyleSheet';
@@ -6,6 +6,8 @@ import { COLORS, FONTS, IMAGES } from '../../constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import { ScrollView } from 'react-native-gesture-handler';
+import { AuthContext } from '../../contexts/AuthProvider';
+
 
 
 
@@ -62,6 +64,7 @@ const profileData = [
 
 const Profile = ({ navigation }) => {
 
+    const { userData } = useContext(AuthContext);
     const theme = useTheme();
     const { colors } = theme;
 
@@ -123,23 +126,25 @@ const Profile = ({ navigation }) => {
                                 style={{ height: 18, width: 18, resizeMode: 'contain', tintColor: '#fff' }}
                                 source={IMAGES.calendar}
                             />
-                            <Text style={{ ...FONTS.fontRegular, fontSize: 13, color: COLORS.white }}>Member Since Oct 2023</Text>
+                            <Text style={{ ...FONTS.fontRegular, fontSize: 13, color: COLORS.white }}>
+                                Member since {new Date(userData.created_at_formatted.replace("th", "").replace("at", "")).toLocaleString("en-US", { month: "long", year: "numeric" })}
+                            </Text>
                         </View>
                         <View style={{ backgroundColor: COLORS.secondary, flex: 1, padding: 20, borderRadius: 20, alignItems: 'center', borderTopLeftRadius: 25, borderTopRightRadius: 25 }}>
                             <View style={{ backgroundColor: 'rgba(255,255,255,0.9)', width: 85, height: 85, borderRadius: 50, alignItems: 'center', justifyContent: 'center' }}>
                                 <Image
                                     style={{ height: 80, width: 80, borderRadius: 50 }}
-                                    source={IMAGES.Small5}
+                                    source={userData?.photo_url ? { uri: userData.photo_url } : IMAGES.Small5}
                                 />
                             </View>
-                            <Text style={[FONTS.fontLg, FONTS.fontSemiBold, { color: COLORS.white, fontSize: 18, marginTop: 10 }]}>Deepesh Gour</Text>
-                            <Text style={[FONTS.font, { color: COLORS.white, marginTop: 5, opacity: .7 }]}>deepeshgour756@gmail.com</Text>
+                            <Text style={[FONTS.fontLg, FONTS.fontSemiBold, { color: COLORS.white, fontSize: 18, marginTop: 10 }]}>{userData.name?userData.name:'Anonymous'}</Text>
+                            <Text style={[FONTS.font, { color: COLORS.white, marginTop: 5, opacity: .7 }]}>{userData.email?userData.email:'anonymus@example.com'}</Text>
                             <View style={{ backgroundColor: COLORS.white, paddingTop: 5, borderRadius: 9, marginTop: 15, flexDirection: 'row', gap: 20, paddingHorizontal: 20 }}>
                                 <TouchableOpacity style={{ alignItems: 'center' }}
                                     onPress={() => navigation.navigate('FollowerFollowing')}
                                 >
                                     <Text style={{ ...FONTS.h6, ...FONTS.fontMedium, color: COLORS.title, }}>1520</Text>
-                                    <Text style={{ ...FONTS.fontRegular, fontSize: 12, color: COLORS.title, opacity: .7, lineHeight: 14 }}>Followers</Text>
+                                    <Text style={{ ...FONTS.fontRegular, fontSize: 12, color: COLORS.title, opacity: .7, lineHeight: 14 }}>Favourates</Text>
                                 </TouchableOpacity>
                                 <LinearGradient colors={['rgba(0, 0, 0, 0.0)', 'rgba(18, 9, 46, 0.20)', 'rgba(0, 0, 0, 0.0)']}
                                     style={{ width: 2, height: 50 }}
@@ -148,7 +153,35 @@ const Profile = ({ navigation }) => {
                                     onPress={() => navigation.navigate('FollowerFollowing')}
                                 >
                                     <Text style={{ ...FONTS.h6, ...FONTS.fontMedium, color: COLORS.title }}>360</Text>
-                                    <Text style={{ ...FONTS.fontRegular, fontSize: 12, color: COLORS.title, opacity: .7, lineHeight: 14 }}>Following</Text>
+                                    <Text style={{ ...FONTS.fontRegular, fontSize: 12, color: COLORS.title, opacity: .7, lineHeight: 14 }}>Favourates</Text>
+                                </TouchableOpacity>
+                                 
+                            </View>
+
+                             <View style={{ backgroundColor: COLORS.white, paddingTop: 5, borderRadius: 9, marginTop: 15, flexDirection: 'row', gap: 20, paddingHorizontal: 20 }}>
+                                <TouchableOpacity style={{ alignItems: 'center' }}
+                                    onPress={() => navigation.navigate('FollowerFollowing')}
+                                >
+                                    <Text style={{ ...FONTS.h6, ...FONTS.fontMedium, color: COLORS.title, }}>1520</Text>
+                                    <Text style={{ ...FONTS.fontRegular, fontSize: 12, color: COLORS.title, opacity: .7, lineHeight: 14 }}>Favourates</Text>
+                                </TouchableOpacity>
+                                <LinearGradient colors={['rgba(0, 0, 0, 0.0)', 'rgba(18, 9, 46, 0.20)', 'rgba(0, 0, 0, 0.0)']}
+                                    style={{ width: 2, height: 50 }}
+                                ></LinearGradient>
+                                <TouchableOpacity style={{ alignItems: 'center' }}
+                                    onPress={() => navigation.navigate('FollowerFollowing')}
+                                >
+                                    <Text style={{ ...FONTS.h6, ...FONTS.fontMedium, color: COLORS.title }}>360</Text>
+                                    <Text style={{ ...FONTS.fontRegular, fontSize: 12, color: COLORS.title, opacity: .7, lineHeight: 14 }}>Favourates</Text>
+                                </TouchableOpacity>
+                                <LinearGradient colors={['rgba(0, 0, 0, 0.0)', 'rgba(18, 9, 46, 0.20)', 'rgba(0, 0, 0, 0.0)']}
+                                    style={{ width: 2, height: 50 }}
+                                ></LinearGradient>
+                                <TouchableOpacity style={{ alignItems: 'center' }}
+                                    onPress={() => navigation.navigate('FollowerFollowing')}
+                                >
+                                    <Text style={{ ...FONTS.h6, ...FONTS.fontMedium, color: COLORS.title }}>360</Text>
+                                    <Text style={{ ...FONTS.fontRegular, fontSize: 12, color: COLORS.title, opacity: .7, lineHeight: 14 }}>Favourates</Text>
                                 </TouchableOpacity>
                             </View>
                             <TouchableOpacity style={{ backgroundColor: COLORS.primary, padding: 10, borderRadius: 50, position: 'absolute', top: 10, right: 10 }}
@@ -160,9 +193,11 @@ const Profile = ({ navigation }) => {
                                 />
                             </TouchableOpacity>
                         </View>
+
+                        
                     </View>
                     <View style={{ paddingVertical: 10 }}>
-                        <Text style={{ ...FONTS.fontMedium, color: colors.title, fontSize: 16 }}>All Post</Text>
+                        <Text style={{ ...FONTS.fontMedium, color: colors.title, fontSize: 16 }}>All Post (9)</Text>
                     </View>
                     <View>
                         {profileData.map((item, index) => (

@@ -9,6 +9,7 @@ import {
   Modal,
   ScrollView,
   Keyboard,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@react-navigation/native';
@@ -21,8 +22,9 @@ import { SIZES, FONTS, IMAGES, COLORS } from '../../constants/theme';
 import Button from '../../components/Button/Button';
 import api from '../../../src/services/api';
 
+
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
+
 
 const genderMap = { 1: 'male', 2: 'female' };
 const reverseGenderMap = { male: 1, female: 2 };
@@ -108,66 +110,121 @@ const EditProfile = ({ navigation }) => {
     }
   };
 
-const handleImageSelect = async () => {
+async function handleImageSelectWithDebug() {
   try {
+    // 1. Get credentials
+    if (!userId || !userToken) {
+      throw new Error('Missing authentication credentials');
+    }
+
+    // 2. Launch image picker
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaType?.Images ||  // Newer versions
+      ImagePicker.MediaTypeOptions?.Images ||  // Older versions
+      'Images',
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
-      base64: false, // <--- important
+      quality: 0.8,
     });
 
-    if (result.canceled || !result.assets || !result.assets.length) {
-      showSnackbar('Image selection canceled');
-      return;
-    }
+    if (result.canceled || !result.assets?.[0]) return;
 
+    // 3. Prepare the file
     const asset = result.assets[0];
-    const uri = asset.uri;
-    const fileName = uri.split('/').pop();
-    const fileType = asset.type || 'image/jpeg'; // fallback MIME type
-
-    const formData = new FormData();
-    formData.append('photo_path', {
-      uri: asset.uri,                     // ✅ correct file URI
-      name: asset.fileName || 'photo.jpg',
-      type: asset.type || 'image/jpeg',
-    });
-    formData.append('latest_update_ip', '127.0.0.1');
-
-    console.log("Uploading image:", {
-  uri, fileName, fileType,
-  userId,
-  headers: {
-    Authorization: `Bearer ${userToken}`,
-    'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=',
-  }
-});
-
-
-    const response = await api.put(`/users/${userId}/photo`, formData, {
-      headers: {
-        Authorization: userToken.startsWith('Bearer ') ? userToken : `Bearer ${userToken}`,
-        Accept: 'application/json',
-        //'Content-Type': 'multipart/form-data',
-        'Content-Language': 'en',
-        'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=',
-        'X-AppType': 'docs',
-      },
-    });
-
-    if (response.data?.success) {
-      updateUserData(response.data.result);
-      showSnackbar('Photo updated successfully');
-    } else {
-      throw new Error(response.data?.message || 'Upload failed');
+    let localUri = asset.uri;
+    
+    // Android requires file:// prefix
+    if (Platform.OS === 'android' && !localUri.startsWith('file://')) {
+      localUri = `file://${localUri}`;
     }
+
+    // 4. Create FormData with EXACT structure
+    const formData = new FormData();
+    
+    // Web implementation
+    if (Platform.OS === 'web') {
+      const response = await fetch(localUri);
+      const blob = await response.blob();
+      
+      // Verify file size (1500KB max)
+      if (blob.size > 1500 * 1024) {
+        throw new Error('Image must be smaller than 1.5MB');
+      }
+      
+      formData.append('photo_path', blob, `user_${userId}_photo.jpg`);
+    } 
+    // Mobile implementation
+    else {
+      formData.append('photo_path', {
+        uri: localUri,
+        name: `user_${userId}_photo.jpg`,
+        type: 'image/jpeg'
+      });
+    }
+    
+    // Required fields
+    formData.append('latest_update_ip', '127.0.0.1');
+    formData.append('_method', 'PUT'); // Critical for Laravel-style override
+
+    // 5. Debug output
+    console.log('FormData contents:', {
+      fields: [
+        '_method: PUT',
+        'latest_update_ip: 127.0.0.1',
+        `photo_path: ${Platform.OS === 'web' ? 'Blob' : localUri}`
+      ],
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=',
+      }
+    });
+
+    // 6. Make the POST request with method override
+    const response = await fetch(
+      `https://qot.ug/api/users/${userId}/photo`,
+      {
+        method: 'POST', // Note: POST not PUT
+        headers: {
+           Authorization: userToken.startsWith('Bearer ') ? userToken : `Bearer ${userToken}`,
+          'Accept': 'application/json',
+          'Content-Language': 'en',
+          'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=',
+          'X-AppType': 'docs'
+          // Don't set Content-Type - let browser set boundary
+        },
+        body: formData,
+      }
+    );
+
+    const responseData = await response.json();
+    
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        data: responseData,
+        message: responseData.error || 'Upload failed'
+      };
+    }
+
+    Alert.alert('Success', 'Profile picture updated!');
+    return responseData;
+
   } catch (error) {
-    console.log('Image upload error:', error);
-    showSnackbar('Image upload failed. Please try again.');
+    console.error('Upload Error:', {
+      status: error.status,
+      message: error.message,
+      responseData: error.data,
+    });
+
+    Alert.alert(
+      'Error',
+      error.status === 422 
+        ? error.data?.error || 'Invalid image (max 1.5MB, JPG/PNG)' 
+        : error.message || 'Upload failed'
+    );
+    throw error;
   }
-};
+}
 
 
 
@@ -248,7 +305,7 @@ const handleImageSelect = async () => {
           />
           <TouchableOpacity
             // TODO: handleImageSelect
-            onPress={handleImageSelect}
+            onPress={handleImageSelectWithDebug}
             style={{ position: 'absolute', bottom: 0, right: 0 }}
           >
             <View style={{ backgroundColor: colors.card, width: 36, height: 36, borderRadius: 50, alignItems: 'center', justifyContent: 'center' }}>

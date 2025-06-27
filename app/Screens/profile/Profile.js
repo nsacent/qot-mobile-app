@@ -7,6 +7,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import { ScrollView } from 'react-native-gesture-handler';
 import { AuthContext } from '../../contexts/AuthProvider';
+import { format } from 'date-fns';
+
 
 
 
@@ -127,7 +129,7 @@ const Profile = ({ navigation }) => {
                                 source={IMAGES.calendar}
                             />
                             <Text style={{ ...FONTS.fontRegular, fontSize: 13, color: COLORS.white }}>
-                                Member since {new Date(userData.created_at_formatted.replace("th", "").replace("at", "")).toLocaleString("en-US", { month: "long", year: "numeric" })}
+                                Member since {format(new Date(userData.email_verified_at), 'MMMM yyyy')}
                             </Text>
                         </View>
                         <View style={{ backgroundColor: COLORS.secondary, flex: 1, padding: 20, borderRadius: 20, alignItems: 'center', borderTopLeftRadius: 25, borderTopRightRadius: 25 }}>

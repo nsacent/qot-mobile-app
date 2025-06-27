@@ -33,10 +33,6 @@ const Sidebar = ({ navigation }) => {
     try {
       await signOut();
       setShowLogoutModal(false);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'SignIn' }],
-      });
     } catch (error) {
       console.error('Logout error:', error);
       // Optional: Show an error alert here if you want
@@ -243,8 +239,7 @@ const Sidebar = ({ navigation }) => {
             backgroundColor: 'rgba(0,0,0,0.5)', // semi-transparent background for modal overlay
             justifyContent: 'center',
             alignItems: 'center',
-        }}
-            >
+        }}>
         <View
             style={{
             backgroundColor: colors.card,

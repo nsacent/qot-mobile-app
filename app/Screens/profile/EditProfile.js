@@ -21,9 +21,9 @@ import { GlobalStyleSheet } from '../../constants/StyleSheet';
 import { SIZES, FONTS, IMAGES, COLORS } from '../../constants/theme';
 import Button from '../../components/Button/Button';
 import api from '../../../src/services/api';
-
-
 import * as ImagePicker from 'expo-image-picker';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
+
 
 
 const genderMap = { 1: 'male', 2: 'female' };
@@ -35,6 +35,9 @@ const EditProfile = ({ navigation }) => {
   const { userData, userToken, updateUserData } = useContext(AuthContext);
   const userId = userData?.id;
   const scrollViewRef = useRef();
+
+  const [uploadProgress, setUploadProgress] = useState(0); // 0 to 100
+  const [isUploading, setIsUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: userData?.name || '',
@@ -110,7 +113,50 @@ const EditProfile = ({ navigation }) => {
     }
   };
 
-async function handleImageSelectWithDebug() {
+
+
+  const uploadWithProgress = (formData) => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      xhr.open('POST', `https://qot.ug/api/users/${userId}/photo`);
+
+      xhr.setRequestHeader('Authorization', userToken.startsWith('Bearer ') ? userToken : `Bearer ${userToken}`);
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.setRequestHeader('Content-Language', 'en');
+      xhr.setRequestHeader('X-AppApiToken', 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=');
+      xhr.setRequestHeader('X-AppType', 'docs');
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(percent);
+        }
+      };
+
+      xhr.onload = () => {
+        const response = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(response);
+        } else {
+          reject({
+            status: xhr.status,
+            data: response,
+            message: response.error || 'Upload failed',
+          });
+        }
+      };
+
+      xhr.onerror = () => reject({ message: 'Network Error' });
+
+      xhr.send(formData);
+    });
+  };
+
+
+
+
+async function handleImageSelect() {
   try {
     // 1. Get credentials
     if (!userId || !userToken) {
@@ -166,65 +212,64 @@ async function handleImageSelectWithDebug() {
     formData.append('latest_update_ip', '127.0.0.1');
     formData.append('_method', 'PUT'); // Critical for Laravel-style override
 
-    // 5. Debug output
-    console.log('FormData contents:', {
-      fields: [
-        '_method: PUT',
-        'latest_update_ip: 127.0.0.1',
-        `photo_path: ${Platform.OS === 'web' ? 'Blob' : localUri}`
-      ],
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=',
-      }
-    });
 
     // 6. Make the POST request with method override
-    const response = await fetch(
-      `https://qot.ug/api/users/${userId}/photo`,
-      {
-        method: 'POST', // Note: POST not PUT
-        headers: {
-           Authorization: userToken.startsWith('Bearer ') ? userToken : `Bearer ${userToken}`,
-          'Accept': 'application/json',
-          'Content-Language': 'en',
-          'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=',
-          'X-AppType': 'docs'
-          // Don't set Content-Type - let browser set boundary
-        },
-        body: formData,
-      }
-    );
+      setIsUploading(true);
+      setUploadProgress(0);
 
-    const responseData = await response.json();
-    
-    if (!response.ok) {
-      throw {
-        status: response.status,
-        data: responseData,
-        message: responseData.error || 'Upload failed'
-      };
-    }
+      const responseData = await uploadWithProgress(formData);
 
-    Alert.alert('Success', 'Profile picture updated!');
-    return responseData;
+      updateUserData(responseData.result);
+      showSnackbar('Profile photo updated successfully!', 'success');
+      setIsUploading(false);
+
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadProgress(0);
+      }, 100);
+
+    //return responseData;
+
+    console.log(responseData);
 
   } catch (error) {
-    console.error('Upload Error:', {
-      status: error.status,
-      message: error.message,
-      responseData: error.data,
-    });
 
-    Alert.alert(
-      'Error',
+    showSnackbar(
       error.status === 422 
-        ? error.data?.error || 'Invalid image (max 1.5MB, JPG/PNG)' 
-        : error.message || 'Upload failed'
+      ? error.data?.error || 'Invalid image (max 1.5MB, JPG/PNG)' 
+      : error.message || 'Upload failed', 'error'
     );
     throw error;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -299,13 +344,23 @@ async function handleImageSelectWithDebug() {
         {/* Profile Photo */}
         <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 20 }}>
         <View>
-          <Image
-              style={{ width: 100, height: 100, borderRadius: 100 }}
-              source={userData?.photo_url ? { uri: userData.photo_url } : IMAGES.Small5}
-          />
+          <AnimatedCircularProgress
+              size={140}
+              width={3}
+              fill={uploadProgress}
+              tintColor={COLORS.primary}
+              backgroundColor="#e0e0e0">
+              {() => (
+                <Image
+                  source={userData?.photo_url ? { uri: userData.photo_url } : IMAGES.Small5}
+                  style={{ width: 140, height: 140, borderRadius: 30 }}
+                />
+              )}
+          </AnimatedCircularProgress>
+          
           <TouchableOpacity
             // TODO: handleImageSelect
-            onPress={handleImageSelectWithDebug}
+            onPress={handleImageSelect}
             style={{ position: 'absolute', bottom: 0, right: 0 }}
           >
             <View style={{ backgroundColor: colors.card, width: 36, height: 36, borderRadius: 50, alignItems: 'center', justifyContent: 'center' }}>

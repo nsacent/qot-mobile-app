@@ -56,64 +56,77 @@ const SignIn = () => {
     return isValid;
   };
 
-  const handleLogin = async () => {
-    Keyboard.dismiss();
+  
 
-    if (!validateForm()) return;
 
-    setLoading(true);
-    setErrors(prev => ({ ...prev, general: '' }));
 
-    try {
-      // Step 1: Authenticate
-      const response = await api.post('/auth/login', {
-        email: formData.email.trim().toLowerCase(),
-        password: formData.password,
-      });
 
-      // Step 2: Debug output
-      console.log('Login API response:', JSON.stringify(response.data, null, 2));
 
-      // Step 3: Extract token and user data
-      const token = response.data?.extra?.authToken;
-      const tokenType = response.data?.extra?.tokenType || 'Bearer';
-      const userProfile = response.data?.result;
 
-      console.log("DEBUG token:", token);
-      console.log("DEBUG userProfile:", userProfile);
 
-      if (!token || !userProfile?.id) {
-        throw new Error('Missing token or user ID from login response');
-      }
 
-      // Step 4: Combine full token string
-      const fullToken = `${tokenType} ${token}`;
+const handleLogin = async () => {
+  Keyboard.dismiss();
 
-      // Step 5: Save in context and AsyncStorage
-      await signIn(fullToken, userProfile);
+  if (!validateForm()) return;
 
-    } catch (error) {
-      console.error('Login error:', error);
-      let errorMessage = 'Login failed. Please try again.';
+  setLoading(true);
+  setErrors(prev => ({ ...prev, general: '' }));
 
-      if (error.response) {
-        if (error.response.status === 401) {
-          errorMessage = 'Invalid email or password';
-        } else if (error.response.data?.message) {
-          errorMessage = error.response.data.message;
-        }
-      } else if (error.message === 'Network Error') {
-        errorMessage = 'Network connection failed';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
+  try {
+    const response = await api.post('/auth/login', {
+      email: formData.email.trim().toLowerCase(),
+      password: formData.password,
+    });
 
-      Alert.alert('Error', errorMessage);
+    const token = response.data?.extra?.authToken;
+    const tokenType = response.data?.extra?.tokenType || 'Bearer';
+    const userProfile = response.data?.result;
 
-    } finally {
-      setLoading(false);
+    if (!token || !userProfile?.id) {
+      throw new Error('Missing token or user ID from login response');
     }
-  };
+
+    const fullToken = `${tokenType} ${token}`;
+
+    // ✅ This sets the user and token → triggers Routes.js to show AppStack
+    await signIn(fullToken, userProfile);
+
+    // ✅ NO NEED to reset navigation manually here
+
+  } catch (error) {
+    console.error('Login error:', error);
+    let errorMessage = 'Login failed. Please try again.';
+
+    if (error.response) {
+      if (error.response.status === 401) {
+        errorMessage = 'Invalid email or password';
+      } else if (error.response.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+    } else if (error.message === 'Network Error') {
+      errorMessage = 'Network connection failed';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    Alert.alert('Error', errorMessage);
+
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
 
 
   const handleFocus = (field) => {

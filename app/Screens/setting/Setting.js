@@ -24,24 +24,18 @@ const SettingData = [
     },
     {
         id: "3",
-        image: IMAGES.wallet,
-        title: "Buy Packages & My Orders",
-        navigate: 'BuyPackages'
-    },
-    {
-        id: "4",
         image: IMAGES.earth,
         title: "Select Language",
         navigate: 'Language'
     },
     {
-        id: "5",
+        id: "4",
         image: IMAGES.help,
         title: "Help & Support",
         navigate: 'Help'
     },
     {
-        id: "7",
+        id: "5",
         image: IMAGES.logout,
         title: "Logout",
         navigate: null // We'll handle manually

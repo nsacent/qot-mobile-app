@@ -134,6 +134,18 @@ const StackNavigator = () => {
             
             {/* Settings */}
             <StackComponent.Screen name="Setting" component={Setting} />
+            <StackComponent.Screen name="Notification" component={Notification} />
+            <StackComponent.Screen name="Privacy" component={Privacy} />
+            <StackComponent.Screen name="Changepassword" component={Changepassword} />
+            <StackComponent.Screen name="Language" component={Language} />
+            <StackComponent.Screen name="Help" component={Help} />
+            <StackComponent.Screen name="BuyPackages" component={BuyPackages} />
+            <StackComponent.Screen name="Myorders" component={Myorders} />
+            <StackComponent.Screen name="Billinginformation" component={Billinginformation} />
+
+
+
+
             {/* ... all other setting screens ... */}
           </>
         ) : (

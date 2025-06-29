@@ -12,40 +12,46 @@ const AuthProvider = ({ children }) => {
 
   // Load token and user info from storage on app launch
   useEffect(() => {
-  const loadAuthState = async () => {
-    try {
-      const token = await AsyncStorage.getItem('userToken');
-      const storedUser = await AsyncStorage.getItem('userData');
-      const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+    const loadAuthState = async () => {
+      try {
+        const token = await AsyncStorage.getItem('userToken');
+        const storedUser = await AsyncStorage.getItem('userData');
+        const parsedUser = storedUser ? JSON.parse(storedUser) : null;
 
-      if (token) {
-        // ✅ Optionally set token headers globally if you're using Axios
-        api.defaults.headers.common['Authorization'] = token;
+        if (token) {
+          // ✅ Optionally set token headers globally if you're using Axios
+          api.defaults.headers.common['Authorization'] = token;
 
 
-        // 🔄 Sync user profile with server
-        const res = await api.get(`/users/${parsedUser.id}`); // or '/me'
+          // 🔄 Sync user profile with server
+          const res = await api.get(`/users/${parsedUser.id}`); // or '/me'
 
-        console.log(res);
-        const freshUser = res.data?.result;
+          console.log(res);
+          const freshUser = res.data?.result;
 
-        // Save updated data
-        setUserToken(token);
-        setUserData(freshUser);
-        await AsyncStorage.setItem('userData', JSON.stringify(freshUser));
-      } else {
+          // Save updated data
+          setUserToken(token);
+          setUserData(freshUser);
+          await AsyncStorage.setItem('userData', JSON.stringify(freshUser));
+        } else {
+          setUserToken(null);
+          setUserData(null);
+        }
+      } catch (error) {
+        console.error('Error loading/syncing auth state:', error);
+        console.warn('🔐 Token invalid or expired. Logging out...');
+        await AsyncStorage.removeItem('userToken');
+        await AsyncStorage.removeItem('userData');
         setUserToken(null);
         setUserData(null);
+        await signOut();
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading/syncing auth state:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  loadAuthState();
-}, []);
+    loadAuthState();
+  }, []);
 
 
   // Sign in: Save token & user to state and AsyncStorage

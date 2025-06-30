@@ -68,6 +68,7 @@ import Myorders from "../Screens/setting/buypackages/Myorders";
 import Language from "../Screens/setting/language/Language";
 import Help from "../Screens/setting/Help/Help";
 import Billinginformation from "../Screens/setting/buypackages/Billinginformation";
+import Profile from "../Screens/profile/Profile";
 
 const StackComponent = createStackNavigator();
 
@@ -134,6 +135,19 @@ const StackNavigator = () => {
             
             {/* Settings */}
             <StackComponent.Screen name="Setting" component={Setting} />
+            <StackComponent.Screen name="Notification" component={Notification} />
+            <StackComponent.Screen name="Privacy" component={Privacy} />
+            <StackComponent.Screen name="Changepassword" component={Changepassword} />
+            <StackComponent.Screen name="Language" component={Language} />
+            <StackComponent.Screen name="Help" component={Help} />
+            <StackComponent.Screen name="BuyPackages" component={BuyPackages} />
+            <StackComponent.Screen name="Myorders" component={Myorders} />
+            <StackComponent.Screen name="Billinginformation" component={Billinginformation} />
+            <StackComponent.Screen name="Profile" component={Profile} />
+
+
+
+
             {/* ... all other setting screens ... */}
           </>
         ) : (

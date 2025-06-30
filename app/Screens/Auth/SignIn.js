@@ -20,7 +20,26 @@ import api from '../../../src/services/api';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../../contexts/AuthProvider';
 
+import { Snackbar } from 'react-native-paper';
+
+
 const SignIn = () => {
+
+
+  // Snackbar state
+  const [snackVisible, setSnackVisible] = useState(false);
+  const [snackText, setSnackText] = useState('');
+  const [snackbarType, setSnackbarType] = useState('success'); // 'success' or 'error'
+
+  const onDismissSnackBar = () => setSnackVisible(false);
+
+  const showSnackbar = (text, type = 'success') => {
+    setSnackText(text);
+    setSnackbarType(type);
+    setSnackVisible(true);
+  };
+
+
   const theme = useTheme();
   const { colors } = theme;
   const navigation = useNavigation();
@@ -56,6 +75,10 @@ const SignIn = () => {
     return isValid;
   };
 
+
+
+
+
   const handleLogin = async () => {
     Keyboard.dismiss();
 
@@ -65,38 +88,32 @@ const SignIn = () => {
     setErrors(prev => ({ ...prev, general: '' }));
 
     try {
-      // Step 1: Authenticate
       const response = await api.post('/auth/login', {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });
 
-      // Step 2: Debug output
-      console.log('Login API response:', JSON.stringify(response.data, null, 2));
-
-      // Step 3: Extract token and user data
       const token = response.data?.extra?.authToken;
       const tokenType = response.data?.extra?.tokenType || 'Bearer';
       const userProfile = response.data?.result;
-
-      console.log("DEBUG token:", token);
-      console.log("DEBUG userProfile:", userProfile);
 
       if (!token || !userProfile?.id) {
         throw new Error('Missing token or user ID from login response');
       }
 
-      // Step 4: Combine full token string
       const fullToken = `${tokenType} ${token}`;
 
-      // Step 5: Save in context and AsyncStorage
+      // ✅ This sets the user and token → triggers Routes.js to show AppStack
       await signIn(fullToken, userProfile);
+
+      // ✅ NO NEED to reset navigation manually here
 
     } catch (error) {
       console.error('Login error:', error);
       let errorMessage = 'Login failed. Please try again.';
 
       if (error.response) {
+
         if (error.response.status === 401) {
           errorMessage = 'Invalid email or password';
         } else if (error.response.data?.message) {
@@ -108,12 +125,15 @@ const SignIn = () => {
         errorMessage = error.message;
       }
 
-      Alert.alert('Error', errorMessage);
+      //Alert.alert('Error', errorMessage);
+      showSnackbar(errorMessage, 'error');
 
     } finally {
       setLoading(false);
     }
   };
+
+
 
 
   const handleFocus = (field) => {
@@ -250,6 +270,25 @@ const SignIn = () => {
 
         </View>
       </ScrollView>
+      
+      {/* Snackbar */}
+      <Snackbar
+        visible={snackVisible}
+        onDismiss={onDismissSnackBar}
+        duration={3000}
+        style={{
+          backgroundColor: snackbarType === 'success' ? COLORS.success : COLORS.danger,
+          margin: 16,
+          borderRadius: 8,
+        }}
+        action={{
+          label: 'OK',
+          onPress: () => setSnackVisible(false),
+          labelStyle: { color: '#fff', fontWeight: 'bold' },
+        }}
+      >
+        <Text style={{ color: '#fff' }}>{snackText}</Text>
+      </Snackbar>
     </SafeAreaView>
   );
 };

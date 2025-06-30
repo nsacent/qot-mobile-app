@@ -5,6 +5,8 @@
 
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { navigate } from '../navigation/navigationRef'; // adjust this path based on your folder structure
+
 import {
   API_BASE_URL,
   DEFAULT_HEADERS,
@@ -13,6 +15,7 @@ import {
   STORAGE_KEYS,
   API_ERRORS,
 } from '../config/api';
+import { navigationRef } from '../navigation/navigationRef';
 
 // Create Axios instance
 const api = axios.create({
@@ -111,6 +114,9 @@ api.interceptors.response.use(
         
         // You might want to navigate to login screen here
         // navigationRef.navigate('Auth');
+
+        navigate('SignIn'); // ✅ Go to login screen
+
         
         error.message = API_ERRORS.UNAUTHORIZED;
         return Promise.reject(error);

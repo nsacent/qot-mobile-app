@@ -8,6 +8,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import themeContext from "../constants/themeContext";
 import { COLORS } from "../constants/theme";
 import { AuthContext } from "../contexts/AuthProvider";
+import { navigationRef } from "../../src/navigation/navigationRef";
 
 // NEW: Import conditional navigators
 import AppStack from "../Screens/AppStack";
@@ -61,7 +62,7 @@ const Routes = () => {
   return (
     <SafeAreaProvider>
       <themeContext.Provider value={themeContextValue}>
-        <NavigationContainer theme={theme}>
+        <NavigationContainer ref={navigationRef} theme={theme}>
           {userToken ? <AppStack /> : <AuthStack />}
         </NavigationContainer>
       </themeContext.Provider>

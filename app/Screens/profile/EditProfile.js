@@ -9,6 +9,7 @@ import {
   Modal,
   ScrollView,
   Keyboard,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@react-navigation/native';
@@ -20,6 +21,10 @@ import { GlobalStyleSheet } from '../../constants/StyleSheet';
 import { SIZES, FONTS, IMAGES, COLORS } from '../../constants/theme';
 import Button from '../../components/Button/Button';
 import api from '../../../src/services/api';
+import * as ImagePicker from 'expo-image-picker';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
+
+
 
 const genderMap = { 1: 'male', 2: 'female' };
 const reverseGenderMap = { male: 1, female: 2 };
@@ -30,6 +35,9 @@ const EditProfile = ({ navigation }) => {
   const { userData, userToken, updateUserData } = useContext(AuthContext);
   const userId = userData?.id;
   const scrollViewRef = useRef();
+
+  const [uploadProgress, setUploadProgress] = useState(0); // 0 to 100
+  const [isUploading, setIsUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: userData?.name || '',
@@ -53,10 +61,13 @@ const EditProfile = ({ navigation }) => {
   // Snackbar state
   const [snackVisible, setSnackVisible] = useState(false);
   const [snackText, setSnackText] = useState('');
+  const [snackbarType, setSnackbarType] = useState('success'); // 'success' or 'error'
 
   const onDismissSnackBar = () => setSnackVisible(false);
-  const showSnackbar = (text) => {
+
+  const showSnackbar = (text, type = 'success') => {
     setSnackText(text);
+    setSnackbarType(type);
     setSnackVisible(true);
   };
 
@@ -102,11 +113,171 @@ const EditProfile = ({ navigation }) => {
     }
   };
 
+
+
+  const uploadWithProgress = (formData) => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      xhr.open('POST', `https://qot.ug/api/users/${userId}/photo`);
+
+      xhr.setRequestHeader('Authorization', userToken.startsWith('Bearer ') ? userToken : `Bearer ${userToken}`);
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.setRequestHeader('Content-Language', 'en');
+      xhr.setRequestHeader('X-AppApiToken', 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=');
+      xhr.setRequestHeader('X-AppType', 'docs');
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(percent);
+        }
+      };
+
+      xhr.onload = () => {
+        const response = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(response);
+        } else {
+          reject({
+            status: xhr.status,
+            data: response,
+            message: response.error || 'Upload failed',
+          });
+        }
+      };
+
+      xhr.onerror = () => reject({ message: 'Network Error' });
+
+      xhr.send(formData);
+    });
+  };
+
+
+
+
+async function handleImageSelect() {
+  try {
+    // 1. Get credentials
+    if (!userId || !userToken) {
+      throw new Error('Missing authentication credentials');
+    }
+
+    // 2. Launch image picker
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaType?.Images ||  // Newer versions
+      ImagePicker.MediaTypeOptions?.Images ||  // Older versions
+      'Images',
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (result.canceled || !result.assets?.[0]) return;
+
+    // 3. Prepare the file
+    const asset = result.assets[0];
+    let localUri = asset.uri;
+    
+    // Android requires file:// prefix
+    if (Platform.OS === 'android' && !localUri.startsWith('file://')) {
+      localUri = `file://${localUri}`;
+    }
+
+    // 4. Create FormData with EXACT structure
+    const formData = new FormData();
+    
+    // Web implementation
+    if (Platform.OS === 'web') {
+      const response = await fetch(localUri);
+      const blob = await response.blob();
+      
+      // Verify file size (1500KB max)
+      if (blob.size > 1500 * 1024) {
+        throw new Error('Image must be smaller than 1.5MB');
+      }
+      
+      formData.append('photo_path', blob, `user_${userId}_photo.jpg`);
+    } 
+    // Mobile implementation
+    else {
+      formData.append('photo_path', {
+        uri: localUri,
+        name: `user_${userId}_photo.jpg`,
+        type: 'image/jpeg'
+      });
+    }
+    
+    // Required fields
+    formData.append('latest_update_ip', '127.0.0.1');
+    formData.append('_method', 'PUT'); // Critical for Laravel-style override
+
+
+    // 6. Make the POST request with method override
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      const responseData = await uploadWithProgress(formData);
+
+      updateUserData(responseData.result);
+      showSnackbar('Profile photo updated successfully!', 'success');
+      setIsUploading(false);
+
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadProgress(0);
+      }, 100);
+
+    //return responseData;
+
+    console.log(responseData);
+
+  } catch (error) {
+
+    showSnackbar(
+      error.status === 422 
+      ? error.data?.error || 'Invalid image (max 1.5MB, JPG/PNG)' 
+      : error.message || 'Upload failed', 'error'
+    );
+    throw error;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const handleUpdateProfile = async () => {
     Keyboard.dismiss();
 
     if (!validateForm()) {
-      showSnackbar('Please fix the errors before submitting.');
+      showSnackbar('Please fix the errors before submitting.', 'error');
       return;
     }
 
@@ -135,8 +306,12 @@ const EditProfile = ({ navigation }) => {
 
       if (response.data && response.data.success) {
         updateUserData(response.data.result);
-        showSnackbar('Profile updated successfully!');
-        //navigation.goBack();
+        showSnackbar('Profile updated successfully!', 'success');
+
+        setTimeout(() => {
+          navigation.goBack();
+        }, 2000); // 3000 milliseconds = 3 seconds
+
       } else {
         throw new Error(response.data?.message || 'Update failed');
       }
@@ -146,7 +321,7 @@ const EditProfile = ({ navigation }) => {
         error.message ||
         'An error occurred while updating your profile.';
       setErrors((prev) => ({ ...prev, general: message }));
-      showSnackbar(message);
+      showSnackbar(message, 'error');
     } finally {
       setLoading(false);
     }
@@ -167,12 +342,39 @@ const EditProfile = ({ navigation }) => {
         keyboardShouldPersistTaps="handled"
       >
         {/* Profile Photo */}
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 30 }}>
-          <Image
-            style={{ width: 100, height: 100, borderRadius: 100 }}
-            source={formData.photo_url || IMAGES.Small5}
-          />
+        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 20 }}>
+        <View>
+          <AnimatedCircularProgress
+              size={140}
+              width={3}
+              fill={uploadProgress}
+              tintColor={COLORS.primary}
+              backgroundColor="#e0e0e0">
+              {() => (
+                <Image
+                  source={userData?.photo_url ? { uri: userData.photo_url } : IMAGES.Small5}
+                  style={{ width: 140, height: 140, borderRadius: 30 }}
+                />
+              )}
+          </AnimatedCircularProgress>
+          
+          <TouchableOpacity
+            // TODO: handleImageSelect
+            onPress={handleImageSelect}
+            style={{ position: 'absolute', bottom: 0, right: 0 }}
+          >
+            <View style={{ backgroundColor: colors.card, width: 36, height: 36, borderRadius: 50, alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ backgroundColor: COLORS.primary, width: 30, height: 30, borderRadius: 50, alignItems: 'center', justifyContent: 'center' }}>
+                <Image
+                  style={{ width: 18, height: 18, resizeMode: 'contain', tintColor: '#fff' }}
+                  source={IMAGES.camera}
+                />
+              </View>
+            </View>
+          </TouchableOpacity>
         </View>
+      </View>
+
 
         {/* Name Field */}
         <View style={{ marginBottom: 20 }}>
@@ -367,9 +569,18 @@ const EditProfile = ({ navigation }) => {
         visible={snackVisible}
         onDismiss={onDismissSnackBar}
         duration={3000}
-        style={{ backgroundColor: COLORS.primary, margin: 16 }}
+        style={{
+          backgroundColor: snackbarType === 'success' ? COLORS.success : COLORS.danger,
+          margin: 16,
+          borderRadius: 8,
+        }}
+        action={{
+          label: 'OK',
+          onPress: () => setSnackVisible(false),
+          labelStyle: { color: '#fff', fontWeight: 'bold' },
+        }}
       >
-        {snackText}
+        <Text style={{ color: '#fff' }}>{snackText}</Text>
       </Snackbar>
     </SafeAreaView>
   );

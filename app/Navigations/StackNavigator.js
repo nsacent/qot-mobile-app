@@ -43,6 +43,8 @@ import Toggles from "../Screens/Components/Toggles";
 // Chat
 import SingleChat from "../Screens/chat/SingleChat";
 import Call from "../Screens/chat/Call";
+import Chat from "../Screens/chat/Chat";
+
 
 // Sell
 import Sell from "../Screens/sell/Sell";
@@ -122,6 +124,7 @@ const StackNavigator = () => {
             {/* Chat */}
             <StackComponent.Screen name="SingleChat" component={SingleChat} />
             <StackComponent.Screen name="Call" component={Call} />
+            <StackComponent.Screen name="Chat" component={Chat} />
             
             {/* Sell */}
             <StackComponent.Screen name="Sell" component={Sell} />

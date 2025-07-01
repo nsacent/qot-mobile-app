@@ -1,10 +1,16 @@
-import React from 'react';
-import { View, Text, SafeAreaView, Image, TouchableOpacity, FlatList, Platform } from 'react-native';
-import { useTheme } from '@react-navigation/native';
-import { COLORS, FONTS, IMAGES, SIZES } from '../../constants/theme';
-import { GlobalStyleSheet } from '../../constants/StyleSheet';
-import { useNavigation } from '@react-navigation/native';
+import React, { useEffect, useState, useContext } from 'react';
+import { View, Text, SafeAreaView, Image, TouchableOpacity, FlatList, Platform, ActivityIndicator } from 'react-native';
+import { useTheme, useNavigation } from '@react-navigation/native';
 import { ScrollView } from 'react-native-gesture-handler';
+import { GlobalStyleSheet } from '../../constants/StyleSheet';
+import { COLORS, FONTS, IMAGES, SIZES } from '../../constants/theme';
+import axios from 'axios';
+import { AuthContext } from '../../contexts/AuthProvider';
+import { formatDistanceToNow } from 'date-fns'
+
+
+const API_URL = 'https://qot.ug/api/threads';
+
 
 
 const LiveUserData = [
@@ -48,117 +54,24 @@ const LiveUserData = [
     id: '6',
     title: 'Sophia James',
     image: IMAGES.Small8,
-  },
+  }
 ]
 
 
-const ChatData = [
-  {
-    id: '1',
-    title: 'Alex Techie',
-    image: IMAGES.car6,
-    image2: IMAGES.Small1,
-    model: "NIKON CORPORATION, NIKON D5500 ",
-    text: "Hello",
-    time: 'just now',
-    chatcount: '1',
-  },
-  {
-    id: '2',
-    title: 'Lily Learns',
-    image: IMAGES.car5,
-    text: "What's your location? ",
-    time: '20min',
-    chatcount: '1',
-    image2: IMAGES.Small2,
-    model: "NIKON CORPORATION, NIKON D5500 ",
-  },
-  {
-    id: '3',
-    title: 'Mia Maven',
-    image: IMAGES.car4,
-    text: "More photos",
-    time: '5min',
-    image2: IMAGES.Small3,
-    model: "NIKON CORPORATION, NIKON D5500 ",
-  },
-  {
-    id: '4',
-    title: 'Sophia James',
-    image: IMAGES.car3,
-    text: "Hello 👋",
-    time: '10min',
-    image2: IMAGES.Small4,
-    model: "NIKON CORPORATION, NIKON D5500 ",
-  },
-  {
-    id: '5',
-    title: 'Deepesh gaur',
-    image: IMAGES.car2,
-    text: "Is it available?",
-    time: '1d',
-    chatcount: '2',
-    image2: IMAGES.Small5,
-    model: "NIKON CORPORATION, NIKON D5500 ",
-  },
-  {
-    id: '6',
-    title: 'Alex Techie',
-    image: IMAGES.car1,
-    text: "hmm ",
-    time: '5d',
-    image2: IMAGES.Small6,
-    model: "NIKON CORPORATION, NIKON D5500 ",
-  },
-  {
-    id: '7',
-    title: 'Lily Learns',
-    image: IMAGES.car2,
-    text: "yes bro",
-    time: '10d',
-    image2: IMAGES.Small7,
-    model: "NIKON CORPORATION, NIKON D5500 ",
-  },
-  {
-    id: '8',
-    title: 'Mia Maven',
-    image: IMAGES.car4,
-    text: "Make an offer",
-    time: '15d',
-    image2: IMAGES.Small8,
-    model: "NIKON CORPORATION, NIKON D5500 ",
-  },
-  {
-    id: '9',
-    title: 'Sophia James',
-    image: IMAGES.car6,
-    text: "Reply back soon",
-    time: '16d',
-    image2: IMAGES.Small9,
-    model: "NIKON CORPORATION, NIKON D5500 ",
-  },
-  {
-    id: '10',
-    title: 'Deepesh gaur',
-    image: IMAGES.car1,
-    text: "Are you there? ",
-    time: '20d',
-    image2: IMAGES.Small10,
-    model: "NIKON CORPORATION, NIKON D5500 ",
-  },
-  {
-    id: '11',
-    title: 'Alex Techie',
-    image: IMAGES.car3,
-    text: "When did you buy this",
-    time: '25d',
-    image2: IMAGES.Small1,
-    model: "NIKON CORPORATION, NIKON D5500 ",
-  }
-];
+const Item = ({ item, navigation, theme }) => {
+  const lastMessage = item.latest_message?.body || 'No message';
+  const chatUserName = item?.latest_message?.p_recipient?.user_id || 'Unknown';
+  const itemImage = item?.p_creator?.photo_url ? { uri: item.p_creator.photo_url } : IMAGES.Small1;
+  const userImage = item?.p_creator?.photo_url ? { uri: item.p_creator.photo_url } : IMAGES.Small1;
+  const chatcount=12;
+  const time=item.updated_at;
+  const active = false;
+  const itemName=item?.subject || "Subject";
 
-const Item = ({ title, image, text, time, chatcount, active, navigation, theme, image2, model }) => (
-    <View>
+    console.log(item);
+
+  return (
+     <View>
       <TouchableOpacity
         onPress={() => navigation.navigate('SingleChat')}
         style={{
@@ -167,9 +80,7 @@ const Item = ({ title, image, text, time, chatcount, active, navigation, theme, 
           justifyContent: 'space-between',
           paddingHorizontal: 10,
           paddingVertical: 10,
-          paddingLeft: 10,
           marginBottom: 8,
-          borderRadius: 15,
           marginHorizontal: 10,
           borderColor: theme.colors.border,
           backgroundColor: theme.colors.card,
@@ -192,24 +103,29 @@ const Item = ({ title, image, text, time, chatcount, active, navigation, theme, 
             <View>
               <Image
                 style={{ width: 50, height: 50, borderRadius: 6 }}
-                source={image}
+                source={itemImage}
               />
             </View>
             <View style={{ position: 'absolute', bottom: -10, right: -10, borderWidth: 2, borderRadius: 50, borderColor: theme.colors.card }}>
               <Image
                 style={{ width: 25, height: 25, borderRadius: 50 }}
-                source={image2}
+                source={userImage}
               />
             </View>
           </TouchableOpacity>
         </View>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', marginBottom: 5 }}>
-            <Text style={{ ...FONTS.fontSm, ...FONTS.fontMedium, color: theme.colors.title, flex: 1 }}>{title}</Text>
-            <Text style={{ ...FONTS.fontSm, ...FONTS.fontRegular, color: theme.colors.title, opacity: .4 }}>{time}</Text>
+            <Text style={{ ...FONTS.fontSm, ...FONTS.fontMedium, color: theme.colors.title, flex: 1 }}>{chatUserName}</Text>
+            <Text style={{ ...FONTS.fontSm, ...FONTS.fontRegular, color: theme.colors.title, opacity: .4 }}>
+              { time?formatDistanceToNow(new Date(time), { addSuffix: true }):'Sometime ago'}
+            </Text>
+
+
+
           </View>
           <View style={{ flexDirection: 'row', paddingRight: 60 }}>
-            <Text numberOfLines={1} style={{ ...FONTS.fontXs, color: theme.colors.title, flex: 1 }}>{model}</Text>
+            <Text numberOfLines={1} style={{ ...FONTS.fontXs, color: theme.colors.title, flex: 1 }}>{itemName}</Text>
           </View>
           <View style={{ position: 'absolute', flexDirection: 'row', alignItems: 'center', bottom: 5, right: 5 }}>
             {chatcount &&
@@ -219,19 +135,20 @@ const Item = ({ title, image, text, time, chatcount, active, navigation, theme, 
             }
           </View>
           <View style={{ flexDirection: 'row', marginTop: 5 }}>
-            <Text style={{ ...FONTS.fontXs, color: theme.colors.text, flex: 1 }}>{text}</Text>
+            <Text style={{ ...FONTS.fontXs, color: theme.colors.text, flex: 1 }}>{lastMessage}</Text>
           </View>
         </View>
       </TouchableOpacity>
     </View>
-)
+  );
+};
+
+
+
 
 const ActiveChat = () => {
   const navigation = useNavigation();
-
-  const theme = useTheme();
-  const { colors } = theme;
-
+  const { colors } = useTheme();
   return (
     <View style={[GlobalStyleSheet.container,{padding:0}]}>
       <ScrollView
@@ -259,51 +176,64 @@ const ActiveChat = () => {
       <Text style={{ ...FONTS.fontMedium, fontSize: 16, color: colors.title, paddingHorizontal: 15, marginBottom: 10 }}>Messages</Text>
     </View>
   )
-}
-
+};
 
 const Chat = ({ navigation }) => {
-
   const theme = useTheme();
-  const { colors } = theme;
+  const { userToken } = useContext(AuthContext);
+  const [chatData, setChatData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchThreads = async () => {
+    try {
+      const response = await axios.get(API_URL, {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Content-Language': 'en',
+          'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY='
+        }
+      });
+      if (response.data.success && response.data.result?.data) {
+        setChatData(response.data.result.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch threads:', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchThreads();
+  }, []);
 
   return (
-    <SafeAreaView style={{ backgroundColor: colors.card, flex: 1 }}>
+    <SafeAreaView style={{ backgroundColor: theme.colors.card, flex: 1 }}>
       <View style={GlobalStyleSheet.container}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border, marginHorizontal: -15, paddingHorizontal: 15 }}>
-          <Text style={{ ...FONTS.fontSemiBold, fontSize: 18, color: colors.title, flex: 1 }}>Chats</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: theme.colors.border, marginHorizontal: -15, paddingHorizontal: 15 }}>
+          <Text style={{ ...FONTS.fontSemiBold, fontSize: 18, color: theme.colors.title, flex: 1 }}>Chats</Text>
           <TouchableOpacity>
-            <Image
-              style={{ width: 20, height: 20, resizeMode: 'contain', tintColor: colors.title }}
-              source={IMAGES.search}
-            />
+            <Image style={{ width: 20, height: 20, resizeMode: 'contain', tintColor: theme.colors.title }} source={IMAGES.search} />
           </TouchableOpacity>
         </View>
       </View>
-      <FlatList
-        contentContainerStyle={[{paddingBottom: 100 },Platform.OS === 'web' && GlobalStyleSheet.container,{padding:0}]}
-        showsVerticalScrollIndicator={false}
-        data={ChatData}
-        renderItem={({ item }) =>
-          <Item
-            title={item.title}
-            image={item.image}
-            image2={item.image2}
-            text={item.text}
-            isChecked={item.isChecked}
-            time={item.time}
-            chatcount={item.chatcount}
-            active={item.active}
-            model={item.model}
-            navigation={navigation}
-            theme={theme}
-          />
-        }
-        ListHeaderComponent={() => <ActiveChat />}
-        keyExtractor={item => item.id}
-      />
+
+      {loading ? (
+        <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
+      ) : (
+        <FlatList
+          contentContainerStyle={[{ paddingBottom: 100 }, Platform.OS === 'web' && GlobalStyleSheet.container]}
+          showsVerticalScrollIndicator={false}
+          data={chatData}
+          renderItem={({ item }) => <Item item={item} navigation={navigation} theme={theme} />}
+          ListHeaderComponent={() => <ActiveChat />}
+          keyExtractor={(item) => item.id.toString()}
+        />
+      )}
     </SafeAreaView>
-  )
-}
+  );
+};
 
 export default Chat;

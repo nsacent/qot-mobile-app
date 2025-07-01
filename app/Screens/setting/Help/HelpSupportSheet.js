@@ -1,28 +1,37 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { COLORS, FONTS } from '../../../constants/theme';
-import { useTheme } from '@react-navigation/native';
+import { useTheme, useNavigation } from '@react-navigation/native';
 
-const HelpSupportSheet = ({ onSelect }) => {
+const HelpSupportSheet = () => {
     const { colors } = useTheme();
+    const navigation = useNavigation();
 
     const options = [
-        'Account Issues',
-        'Contact Admin',
-        'Report a User',
-        'Support',
-        'Other',
+        { id: '1', title: 'Account Issues' },
+        { id: '2', title: 'Contact Admin' },
+        { id: '3', title: 'Report a User' },
+        { id: '4', title: 'Support' },
+        { id: '5', title: 'Other' },
     ];
+
+    const goToAdminChat = (topic) => {
+        navigation.navigate('SingleChat', {
+            userId: '1',
+            username: 'Admin',
+            initialMessage: `Hi, I need help with ${topic}`,
+        });
+    };
 
     return (
         <View>
             <Text style={{ ...FONTS.fontLg, ...FONTS.fontMedium, color: colors.title, marginBottom: 15 }}>
                 Select an issue
             </Text>
-            {options.map((label, index) => (
+            {options.map((item) => (
                 <TouchableOpacity
-                    key={index}
-                    onPress={() => onSelect(label)}
+                    key={item.id}
+                    onPress={goToAdminChat}
                     style={{
                         backgroundColor: COLORS.primary,
                         paddingVertical: 12,
@@ -31,7 +40,7 @@ const HelpSupportSheet = ({ onSelect }) => {
                     }}
                 >
                     <Text style={{ ...FONTS.fontLg, ...FONTS.fontMedium, color: '#fff', textAlign: 'center' }}>
-                        {label}
+                        {item.title}
                     </Text>
                 </TouchableOpacity>
             ))}

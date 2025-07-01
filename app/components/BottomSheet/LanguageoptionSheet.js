@@ -10,8 +10,8 @@ const LanguageSheet = (props, ref) => {
     const bottomSheetRef = useRef(null);
     const [languages, setLanguages] = useState([]);
     const [loading, setLoading] = useState(true);
-    const snapPoints = useMemo(() => ['50%'], []);
     const { colors } = useTheme();
+    const snapPoints = useMemo(() => ['50%'], []);
 
     useEffect(() => {
         const fetchLanguages = async () => {

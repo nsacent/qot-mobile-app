@@ -1,4 +1,4 @@
-import React from 'react';
+/*import React from 'react';
 import { View, Text, TouchableOpacity, Image, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@react-navigation/native';
@@ -309,5 +309,161 @@ const SingleChat = ({ navigation }) => {
         </SafeAreaView>
     )
 }
+
+export default SingleChat;*/
+
+
+
+
+import React, { useEffect, useState, useContext, useRef } from 'react';
+import { View, Text, TextInput, Image, TouchableOpacity, FlatList, ActivityIndicator, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRoute, useTheme, useNavigation } from '@react-navigation/native';
+import { GlobalStyleSheet } from '../../constants/StyleSheet';
+import { COLORS, FONTS, IMAGES } from '../../constants/theme';
+import axios from 'axios';
+import { AuthContext } from '../../contexts/AuthProvider';
+import ChatoptionSheet from '../../components/BottomSheet/ChatoptionSheet';
+
+const API_BASE = 'https://qot.ug/api';
+
+const SingleChat = () => {
+  const { userToken } = useContext(AuthContext);
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { threadId } = route.params; // threadId must be passed via navigation
+
+  const [messages, setMessages] = useState([]);
+  const [messageInput, setMessageInput] = useState('');
+  const [loading, setLoading] = useState(true);
+  const moresheet = useRef();
+
+  const fetchMessages = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/threads/${threadId}`, {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'Content-Language': 'en',
+          'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=',
+        },
+      });
+
+      if (response.data.success && response.data.result?.messages) {
+        setMessages(response.data.result.messages);
+      }
+    } catch (error) {
+      console.error('Fetch messages failed:', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!messageInput.trim()) return;
+
+    try {
+      const response = await axios.post(
+        `${API_BASE}/messages`,
+        {
+          thread_id: threadId,
+          body: messageInput.trim(),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'Content-Language': 'en',
+            'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=',
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setMessageInput('');
+        fetchMessages(); // Refresh after sending
+      }
+    } catch (error) {
+      console.error('Send message failed:', error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchMessages();
+  }, [threadId]);
+
+  const renderItem = ({ item }) => {
+    const isMine = item.p_recipient?.user_id !== item.user_id;
+
+    return (
+      <View style={{ alignSelf: isMine ? 'flex-end' : 'flex-start', maxWidth: '75%', marginVertical: 5 }}>
+        <View
+          style={{
+            backgroundColor: isMine ? COLORS.primary : theme.colors.input,
+            padding: 10,
+            borderRadius: 10,
+            borderBottomLeftRadius: isMine ? 10 : 0,
+            borderBottomRightRadius: isMine ? 0 : 10,
+          }}
+        >
+          <Text style={{ color: isMine ? '#fff' : theme.colors.title }}>{item.body}</Text>
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.card }}>
+      {/* Header */}
+      <View style={[GlobalStyleSheet.container, { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 15 }}>
+          <Image source={IMAGES.arrowleft} style={{ width: 18, height: 18, tintColor: theme.colors.title }} />
+        </TouchableOpacity>
+        <Text style={{ ...FONTS.h6, color: theme.colors.title, flex: 1 }}>Chat</Text>
+        <TouchableOpacity onPress={() => moresheet.current?.openSheet()}>
+          <Image source={IMAGES.more} style={{ width: 20, height: 20, tintColor: theme.colors.title }} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Messages */}
+      {loading ? (
+        <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 30 }} />
+      ) : (
+        <FlatList
+          data={messages}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={{ padding: 15 }}
+          inverted
+        />
+      )}
+
+      {/* Input */}
+      <View style={{ flexDirection: 'row', padding: 10, borderTopWidth: 1, borderColor: theme.colors.borderColor }}>
+        <TextInput
+          style={{
+            flex: 1,
+            backgroundColor: theme.colors.input,
+            paddingHorizontal: 15,
+            paddingVertical: 10,
+            borderRadius: 25,
+            color: theme.colors.title,
+          }}
+          placeholder="Type a message..."
+          value={messageInput}
+          onChangeText={setMessageInput}
+        />
+        <TouchableOpacity onPress={sendMessage} style={{ marginLeft: 10, justifyContent: 'center' }}>
+          <Image source={IMAGES.send} style={{ width: 24, height: 24, tintColor: COLORS.primary }} />
+        </TouchableOpacity>
+      </View>
+
+      <ChatoptionSheet ref={moresheet} />
+    </SafeAreaView>
+  );
+};
 
 export default SingleChat;

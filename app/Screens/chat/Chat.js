@@ -7,6 +7,7 @@ import { COLORS, FONTS, IMAGES, SIZES } from '../../constants/theme';
 import axios from 'axios';
 import { AuthContext } from '../../contexts/AuthProvider';
 import { formatDistanceToNow } from 'date-fns'
+import { fetchPostData, fetchUserData } from '../../contexts/services/userService';
 
 
 const API_URL = 'https://qot.ug/api/threads';
@@ -59,21 +60,55 @@ const LiveUserData = [
 
 
 const Item = ({ item, navigation, theme }) => {
-  const lastMessage = item.latest_message?.body || 'No message';
-  const chatUserName = item?.latest_message?.p_recipient?.user_id || 'Unknown';
-  const itemImage = item?.p_creator?.photo_url ? { uri: item.p_creator.photo_url } : IMAGES.Small1;
-  const userImage = item?.p_creator?.photo_url ? { uri: item.p_creator.photo_url } : IMAGES.Small1;
-  const chatcount=12;
-  const time=item.updated_at;
-  const active = false;
-  const itemName=item?.subject || "Subject";
 
-    console.log(item);
+  const [post, setPostData] = useState(null);
+  const [user, setUserData] = useState(null);
+
+  const { userToken } = useContext(AuthContext);
+
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const postId = item?.post_id;
+        const userId = item?.latest_message?.p_recipient?.user_id;
+
+
+        console.log(postId);
+        const postData = await fetchPostData(postId, userToken); // replace with actual values
+        const userData = await fetchUserData(userId, userToken); // replace with actual values
+        await setPostData(postData); // if you're storing in state
+        await setUserData(userData); // if you're storing in state
+        //console.log('Post-data:', postData);
+        //console.log('Useer-data:', userData);
+
+      } catch (err) {
+
+        console.error(err.message);
+        // handle error (e.g., signOut if token invalid)
+      }
+    };
+
+    getData();
+  }, []);
+
+  //console.log('post', post);
+  //console.log('user', user);
+
+  const lastMessage = item.latest_message?.body || 'No message';
+  const chatUserName = post?.contact_name || 'Unknown';
+  const itemImage = post?.picture?.url?.small ? { uri: post.picture.url.small } : IMAGES.Small1;
+  const userImage = user?.photo_url ? { uri: user.photo_url } : IMAGES.Small1;
+  const chatcount = 12;
+  const time = item.updated_at;
+  const active = false;
+  const itemName = item?.subject || "Subject";
+
+  console.log(item);
 
   return (
-     <View>
+    <View>
       <TouchableOpacity
-        onPress={() => navigation.navigate('SingleChat')}
+        onPress={() => navigation.navigate('SingleChat', { threadId: item.id })}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -118,7 +153,7 @@ const Item = ({ item, navigation, theme }) => {
           <View style={{ flexDirection: 'row', marginBottom: 5 }}>
             <Text style={{ ...FONTS.fontSm, ...FONTS.fontMedium, color: theme.colors.title, flex: 1 }}>{chatUserName}</Text>
             <Text style={{ ...FONTS.fontSm, ...FONTS.fontRegular, color: theme.colors.title, opacity: .4 }}>
-              { time?formatDistanceToNow(new Date(time), { addSuffix: true }):'Sometime ago'}
+              {time ? formatDistanceToNow(new Date(time), { addSuffix: true }) : 'Sometime ago'}
             </Text>
 
 
@@ -150,7 +185,7 @@ const ActiveChat = () => {
   const navigation = useNavigation();
   const { colors } = useTheme();
   return (
-    <View style={[GlobalStyleSheet.container,{padding:0}]}>
+    <View style={[GlobalStyleSheet.container, { padding: 0 }]}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

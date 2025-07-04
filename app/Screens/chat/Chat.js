@@ -108,7 +108,7 @@ const Item = ({ item, navigation, theme }) => {
   return (
     <View>
       <TouchableOpacity
-        onPress={() => navigation.navigate('SingleChat', { threadId: item.id })}
+        onPress={() => navigation.navigate('SingleChat', { threadId: item.id, postId:item.post_id,recipient: {id:user?.id,name:chatUserName,photo_url:userImage}})}
         style={{
           flexDirection: 'row',
           alignItems: 'center',

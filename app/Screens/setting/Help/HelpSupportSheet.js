@@ -17,7 +17,7 @@ const HelpSupportSheet = () => {
 
     const goToAdminChat = (topic) => {
         navigation.navigate('SingleChat', {
-            userId: '1',
+            threadId: '1',
             username: 'Admin',
             initialMessage: `Hi, I need help with ${topic}`,
         });

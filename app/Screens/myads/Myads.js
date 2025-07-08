@@ -1,6 +1,332 @@
-import React, { useRef, useState } from 'react';
+
+/*import React, { useEffect, useRef, useState, useContext } from 'react';
+import {
+    View,
+    Text,
+    SafeAreaView,
+    TouchableOpacity,
+    Image,
+    Animated,
+    Platform,
+    FlatList,
+    RefreshControl,
+} from 'react-native';
+import { useTheme } from '@react-navigation/native';
+import Header from '../../layout/Header';
+import { COLORS, FONTS, IMAGES, SIZES } from '../../constants/theme';
+import { GlobalStyleSheet } from '../../constants/StyleSheet';
+import FeatherIcon from 'react-native-vector-icons/Feather';
+import axios from 'axios';
+import { format, formatDistanceToNow, parseISO } from 'date-fns';
+import { AuthContext } from '../../contexts/AuthProvider';
+
+
+
+import { ScrollView } from 'react-native-gesture-handler';
+
+import MyadsSheet from '../../components/BottomSheet/MyadsSheet';
+
+
+
+const API_BASE_URL = 'https://qot.ug/api';
+const API_TOKEN = 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=';
+
+const Myads = ({ navigation }) => {
+    const { userToken, userData, signOut } = useContext(AuthContext);
+
+    
+
+
+
+    
+
+    const theme = useTheme();
+    const { colors } = theme;
+
+    const scrollRef = useRef();
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const scrollX = useRef(new Animated.Value(0)).current;
+
+    const slideIndicator = scrollX.interpolate({
+        inputRange: [0, SIZES.width > SIZES.container ? SIZES.container : SIZES.width],
+        extrapolate: 'clamp',
+    });
+
+    const onPressTouch = (val) => {
+        setCurrentIndex(val)
+        scrollRef.current?.scrollTo({
+            x: SIZES.width * val,
+            animated: true,
+        });
+    }
+
+    const [ads, setAds] = useState([]);
+    const [favourites, setFavourites] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+
+    const getHeaders = () => ({
+        'Authorization': `Bearer ${userToken}`,   // Make sure userToken is defined
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Content-Language': 'en',
+        'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=',
+        'X-AppType': 'docs',
+    });
+
+    const fetchAds = async () => {
+        try {
+            setLoading(true);
+
+            const headers = getHeaders(); // Make sure this includes Authorization and X-AppApiToken
+            const res = await axios.get(`https://qot.ug/api/posts?belongLoggedUser=1&embed=pictures`, {
+                headers,
+            });
+            console.log('Fetched ads:', res.data.result.data); // Check data shape
+            setAds(res.data.result.data);
+        } catch (error) {
+            console.error('Error fetching ads:', error);
+            setError('Failed to load ads');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchFavourites = async () => {
+        try {
+            console.log('TTToken:  ',userToken);
+            const headers = getHeaders(); // Make sure this includes Authorization and X-AppApiToken
+            const res = await axios.get(`https://qot.ug/api/posts?belongLoggedUser=1&embed=pictures`, {
+                headers,
+            }); setFavourites(res.data?.result?.data || []);
+        } catch (err) {
+            console.error('Error fetching favourites:', err);
+        }
+    };
+
+    const handleDelete = async (adId) => {
+        try {
+                        const headers = getHeaders(); // Make sure this includes Authorization and X-AppApiToken
+
+            await axios.delete(`${API_BASE_URL}/user/posts/${adId}`, { headers });
+            setAds(prev => prev.filter(item => item.id !== adId));
+        } catch (err) {
+            console.error('Delete failed:', err);
+        }
+    };
+
+    const toggleFavourite = async (adId) => {
+        try {
+                        const headers = getHeaders(); // Make sure this includes Authorization and X-AppApiToken
+
+            await axios.post(`${API_BASE_URL}/user/favourites/toggle`, { ad_id: adId }, { headers });
+            fetchFavourites();
+        } catch (err) {
+            console.error('Toggle favourite failed:', err);
+        }
+    };
+
+    useEffect(() => {
+        fetchAds(true);
+        fetchFavourites();
+    }, []);
+
+    //const moresheet = React.useRef();
+
+   return (
+        <SafeAreaView style={{ backgroundColor: colors.card, flex: 1 }}>
+            <Header
+                title="My Ads"
+                leftIcon={'back'}
+                titleLeft
+            />
+            <View style={[GlobalStyleSheet.container,{ paddingTop: 10, paddingHorizontal: 10,padding:0 }]}>
+                <View style={{ flexDirection: 'row', marginTop: 0, marginBottom: 0, }}>
+                    <TouchableOpacity
+                        onPress={() => onPressTouch(0)}
+                        style={GlobalStyleSheet.TouchableOpacity2}>
+                        <Text style={[{ ...FONTS.fontMedium, fontSize: 14, color: '#475A77' }, currentIndex == 0 && { color: COLORS.primary }]}>Ads</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => onPressTouch(1)}
+                        style={GlobalStyleSheet.TouchableOpacity2}>
+                        <Text style={[{ ...FONTS.fontMedium, fontSize: 14, color: '#475A77' }, currentIndex == 1 && { color: COLORS.primary }]}>Favourites</Text>
+                    </TouchableOpacity>
+                    <Animated.View
+                        style={{
+                            backgroundColor: COLORS.primary,
+                            width: '50%',
+                            height: 3,
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            transform: [{ translateX: slideIndicator }]
+                        }}>
+                    </Animated.View>
+                </View>
+            </View>
+            <View style={[Platform.OS === 'web' && GlobalStyleSheet.container,{padding:0}]}>
+                <ScrollView
+                    horizontal
+                    scrollEventThrottle={16}
+                    showsHorizontalScrollIndicator={false}
+                    pagingEnabled
+                    ref={scrollRef}
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                        { useNativeDriver: false }
+                    )}
+                    onMomentumScrollEnd={(e) => {
+                        if (e.nativeEvent.contentOffset.x.toFixed(0) == SIZES.width.toFixed(0)) {
+                            setCurrentIndex(1)
+                        } else if (e.nativeEvent.contentOffset.x.toFixed(0) == 0) {
+                            setCurrentIndex(0)
+                        } else {
+                            setCurrentIndex(0)
+                        }
+                    }}
+                >
+                    <View style={{ marginTop: 20, width: SIZES.width > SIZES.container ? SIZES.container : SIZES.width ,flex:1}}>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <View style={{ paddingHorizontal: 10, flex: 1, paddingBottom: 80 }}>
+                                {ads.map((data, index) => {
+                                    return (
+                                        <TouchableOpacity
+                                            key={index}
+                                            style={[
+                                                GlobalStyleSheet.shadow2,
+                                                {
+                                                    borderColor: colors.border,
+                                                    backgroundColor: colors.card,
+                                                    padding: 10,
+                                                    paddingLeft: 20,
+                                                    marginBottom: 20
+                                                }
+                                            ]}
+                                            onPress={() => navigation.navigate('ItemDetails')}
+                                        >
+                                            <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: 10 }}>
+                                                <Image
+                                                    style={{ height: 70, width: 70, borderRadius: 6 }}
+                                                    source={data.image}
+                                                />
+                                                <View style={{ marginLeft: 10 }}>
+                                                    <Text numberOfLines={1} style={{ ...FONTS.fontSm, ...FONTS.fontSemiBold, color: colors.title, paddingRight: 150 }}>{data.title}</Text>
+                                                    <Text style={{ ...FONTS.font, ...FONTS.fontMedium, color: colors.title, marginTop: 2 }}>{data.price}</Text>
+                                                    <View style={{ backgroundColor: COLORS.primary, width: 100, borderRadius: 20, alignItems: 'center', padding: 2, marginTop: 5 }}>
+                                                        <Text style={{ ...FONTS.fontSm, color: colors.card }}>ACTIVE</Text>
+                                                    </View>
+                                                    <TouchableOpacity style={{ position: 'absolute', right: 50, margin: 10, marginTop: 5 }}
+                                                        onPress={() => moresheet.current.openSheet()}
+                                                    >
+                                                        <Image
+                                                            style={{ width: 18, height: 18, resizeMode: 'contain', tintColor: colors.title }}
+                                                            source={IMAGES.more}
+                                                        />
+                                                    </TouchableOpacity>
+                                                </View>
+                                            </View>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, paddingBottom: 0 }}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                                                        <Image
+                                                            style={{ width: 15, height: 15, resizeMode: 'contain', tintColor: colors.text }}
+                                                            source={IMAGES.eye}
+                                                        />
+                                                        <Text style={{ ...FONTS.fontXs, color: colors.text }}>Views :</Text>
+                                                        <Text style={{ ...FONTS.fontXs, color: colors.title }}>{data.view}</Text>
+                                                    </View>
+                                                    <View style={{ height: 15, width: 1, backgroundColor: colors.borderColor }}></View>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                                                        <Image
+                                                            style={{ width: 15, height: 15, resizeMode: 'contain' }}
+                                                            source={IMAGES.like}
+                                                        />
+                                                        <Text style={{ ...FONTS.fontXs, color: colors.text }}>Likes :</Text>
+                                                        <Text style={{ ...FONTS.fontXs, color: colors.title }}>{data.like}</Text>
+                                                    </View>
+                                                </View>
+                                                <TouchableOpacity style={[GlobalStyleSheet.background, { marginRight: 5, height: 40, width: 40, backgroundColor: theme.dark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)', }]}>
+                                                    <Image
+                                                        style={{ height: 20, width: 20, tintColor: colors.title }}
+                                                        source={IMAGES.delete}
+                                                    />
+                                                </TouchableOpacity>
+                                            </View>
+                                            <View style={{ width: 5, height: 150, backgroundColor: COLORS.primary, position: 'absolute', left: -1, borderTopLeftRadius: 6, borderBottomLeftRadius: 6 }}></View>
+                                        </TouchableOpacity>
+                                    )
+                                })}
+
+                            </View>
+                        </ScrollView>
+                    </View>
+                    <View style={{ marginTop: 20, width: SIZES.width > SIZES.container ? SIZES.container : SIZES.width ,flex:1}}>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <View style={{ paddingHorizontal: 10, flex: 1, paddingBottom: 80 }}>
+                                {favourites.map((item, index2) => (
+                                    <TouchableOpacity
+                                        key={index2}
+                                        style={[
+                                            GlobalStyleSheet.shadow2,
+                                            {
+                                                borderColor: colors.border,
+                                                backgroundColor: colors.card,
+                                                padding: 10,
+                                                marginBottom: 20
+                                            }
+                                        ]}
+                                        onPress={() => navigation.navigate('ItemDetails')}
+                                    >
+                                        <View style={{flexDirection:'row'}}>
+                                            <View style={{ flexDirection: 'row',flex:1 }}>
+                                                <Image
+                                                    style={{ width: 70, height: 70, borderRadius: 6 }}
+                                                    source={item.image}
+                                                />
+                                                <View style={{ marginLeft: 10 }}>
+                                                    <Text style={{ ...FONTS.font, ...FONTS.fontMedium, color: colors.title, fontSize: 16 }}>{item.price}</Text>
+                                                    <Text numberOfLines={1} style={{ ...FONTS.fontSm, ...FONTS.fontSemiBold, color: colors.title, paddingRight: 150, marginTop: 2, }}>{item.title}</Text>
+                                                    <View
+                                                        style={{
+                                                            flexDirection: 'row',
+                                                            marginTop: 5,
+                                                        }}
+                                                    >
+                                                        <FeatherIcon size={12} color={colors.text} name={'map-pin'} />
+                                                        <Text style={[FONTS.fontXs, { fontSize: 11, color: colors.text, marginLeft: 4 }]}>{item.location}</Text>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                            <View style={{marginRight:10}}>
+                                                <Image
+                                                    style={{ width: 25, height: 25, resizeMode: 'contain' }}
+                                                    source={IMAGES.like}
+                                                />
+                                            </View>
+                                        </View>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </ScrollView>
+                    </View>
+                </ScrollView>
+            </View>
+            <MyadsSheet
+                ref={moresheet}
+            />
+        </SafeAreaView>
+    )
+}
+
+export default Myads;*/
+
+
+import React, { useRef, useState ,useContext} from 'react';
 import { View, Text, SafeAreaView, TouchableOpacity, Image, Animated, Platform, } from 'react-native'
-import { useTheme } from '@react-navigation/native'
+import { useTheme ,useEffect} from '@react-navigation/native'
 import Header from '../../layout/Header';
 import { ScrollView } from 'react-native-gesture-handler';
 import { COLORS, FONTS, IMAGES, SIZES } from '../../constants/theme';
@@ -8,7 +334,8 @@ import { GlobalStyleSheet } from '../../constants/StyleSheet';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import MyadsSheet from '../../components/BottomSheet/MyadsSheet';
 
-
+import axios from 'axios';
+import { AuthContext } from '../../contexts/AuthProvider';
 
 const adsData = [
     {
@@ -151,6 +478,9 @@ const FavouritesData = [
 
 const Myads = ({ navigation }) => {
 
+
+    
+
     const theme = useTheme();
     const { colors } = theme;
 
@@ -171,6 +501,44 @@ const Myads = ({ navigation }) => {
             animated: true,
         });
     }
+
+    const [ads, setAds] = useState([]);
+    const [favourites, setFavourites] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+
+    const getHeaders = () => ({
+        'Authorization': `Bearer ${userToken}`,   // Make sure userToken is defined
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Content-Language': 'en',
+        'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=',
+        'X-AppType': 'docs',
+    });
+
+    const fetchAds = async () => {
+        try {
+            setLoading(true);
+
+            const headers = getHeaders(); // Make sure this includes Authorization and X-AppApiToken
+            const res = await axios.get(`https://qot.ug/api/posts?belongLoggedUser=1&embed=pictures`, {
+                headers,
+            });
+            console.log('Fetched ads:', res.data.result.data); // Check data shape
+            setAds(res.data.result.data);
+        } catch (error) {
+            console.error('Error fetching ads:', error);
+            setError('Failed to load ads');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+     useEffect(() => {
+        fetchAds(true);
+    }, []);
 
     const moresheet = React.useRef();
 
@@ -361,3 +729,4 @@ const Myads = ({ navigation }) => {
 }
 
 export default Myads
+

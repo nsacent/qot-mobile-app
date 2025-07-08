@@ -219,6 +219,8 @@ const Chat = ({ navigation }) => {
   const [chatData, setChatData] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  console.log(userToken)
+
   const fetchThreads = async () => {
     try {
       const response = await axios.get(API_URL, {

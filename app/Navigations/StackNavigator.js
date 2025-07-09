@@ -134,6 +134,8 @@ const StackNavigator = () => {
             {/* Profile */}
             <StackComponent.Screen name="FollowerFollowing" component={FollowerFollowing} />
             <StackComponent.Screen name="EditProfile" component={EditProfile} />
+            <StackComponent.Screen name="Anotherprofile" component={Anotherprofile} />
+            
             {/* ... all other profile screens ... */}
             
             {/* Settings */}

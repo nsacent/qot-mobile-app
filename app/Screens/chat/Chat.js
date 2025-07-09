@@ -4,10 +4,12 @@ import { useTheme, useNavigation } from '@react-navigation/native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { GlobalStyleSheet } from '../../constants/StyleSheet';
 import { COLORS, FONTS, IMAGES, SIZES } from '../../constants/theme';
+
 import axios from 'axios';
 import { AuthContext } from '../../contexts/AuthProvider';
 import { formatDistanceToNow } from 'date-fns'
 import { fetchPostData, fetchUserData } from '../../contexts/services/userService';
+
 
 
 const API_URL = 'https://qot.ug/api/threads';
@@ -108,7 +110,7 @@ const Item = ({ item, navigation, theme }) => {
   return (
     <View>
       <TouchableOpacity
-        onPress={() => navigation.navigate('SingleChat', { threadId: item.id, post:{id:item.post_id,name:itemName} ,recipient: {id:user?.id,name:chatUserName,photo_url:userImage,item_url:itemImage}})}
+        onPress={() => navigation.navigate('SingleChat', { threadId: item.id, post: { id: item.post_id, name: itemName }, recipient: { id: user?.id, name: chatUserName, photo_url: userImage, item_url: itemImage } })}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -214,7 +216,16 @@ const ActiveChat = () => {
 };
 
 const Chat = ({ navigation }) => {
-  const theme = useTheme();
+
+  
+  
+    const theme = useTheme();
+  
+    const { colors } = theme;
+    //const navigation = useNavigation();
+  
+    const moresheet = React.useRef();
+  
   const { userToken } = useContext(AuthContext);
   const [chatData, setChatData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -250,6 +261,14 @@ const Chat = ({ navigation }) => {
     <SafeAreaView style={{ backgroundColor: theme.colors.card, flex: 1 }}>
       <View style={GlobalStyleSheet.container}>
         <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: theme.colors.border, marginHorizontal: -15, paddingHorizontal: 15 }}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+          >
+            <Image
+              style={{ width: 18, height: 18, tintColor: colors.title, marginRight: 20, marginLeft: 15 }}
+              source={IMAGES.arrowleft}
+            />
+          </TouchableOpacity>
           <Text style={{ ...FONTS.fontSemiBold, fontSize: 18, color: theme.colors.title, flex: 1 }}>Chats</Text>
           <TouchableOpacity>
             <Image style={{ width: 20, height: 20, resizeMode: 'contain', tintColor: theme.colors.title }} source={IMAGES.search} />

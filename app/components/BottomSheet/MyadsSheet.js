@@ -61,14 +61,14 @@ const MyadsSheet = (props, ref) => {
                         style={[GlobalStyleSheet.image, { tintColor: 'red' }]}
                         source={IMAGES.delete}
                     />
-                    <Text style={[GlobalStyleSheet.text, { color: 'red' }]}>Remove</Text>
+                    <Text style={[GlobalStyleSheet.text, { color: 'red' }]}>Delete</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={{ flexDirection: 'row', marginBottom: 10 }}>
                     <Image
                         style={[GlobalStyleSheet.image, { tintColor: colors.title }]}
                         source={IMAGES.disable}
                     />
-                    <Text style={[GlobalStyleSheet.text, { color: colors.title }]}>Deactivate</Text>
+                    <Text style={[GlobalStyleSheet.text, { color: colors.title }]}>Archive</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={{ flexDirection: 'row', marginBottom: 10 }}>
                     <Image

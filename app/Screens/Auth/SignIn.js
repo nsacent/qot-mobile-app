@@ -16,7 +16,7 @@ import { COLORS, FONTS, IMAGES } from '../../constants/theme';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import { useTheme } from '@react-navigation/native';
 import { GlobalStyleSheet } from '../../constants/StyleSheet';
-import api from '../../../src/services/api';
+import api, { ApiService } from '../../../src/services/api';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../../contexts/AuthProvider';
 
@@ -88,7 +88,12 @@ const SignIn = () => {
     setErrors(prev => ({ ...prev, general: '' }));
 
     try {
-      const response = await api.post('/auth/login', {
+      /*const response = await api.post('/auth/login', {
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+      });*/
+
+      const response= await ApiService.login(credentials={
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });

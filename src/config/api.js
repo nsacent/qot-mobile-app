@@ -31,12 +31,25 @@ export const API_ENDPOINTS = {
     UPDATE: '/user/update',
     AVATAR: '/user/avatar',
   },
-  LISTINGS: {
-    CREATE: '/listings',
-    GET_ALL: '/listings',
+
+  POSTS_TYPES: {
+    GET_ALL: '/postTypes',
+    BY_ID: `/postTypes/:id`,
+  },
+
+  POSTS_REPORT_TYPES: {
+    GET_ALL: '/reportTypes',
+    BY_ID: `/reportTypes/:id`,
+  },
+
+  POSTS: {
+    CREATE: '/posts',
+    GET_ALL: '/posts',
     SEARCH: '/listings/search',
     BY_ID: '/listings/:id',
   },
+  
+  
   CATEGORIES: {
     GET_ALL: '/categories',
   },

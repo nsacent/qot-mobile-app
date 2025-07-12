@@ -1,5 +1,14 @@
-import React, { useRef } from 'react';
-import { Image, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  Image,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+  RefreshControl
+} from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import SearchBar from '../../components/SearchBar';
@@ -8,235 +17,182 @@ import { IMAGES, FONTS, COLORS } from '../../constants/theme';
 import CategoryList from './CategoryList';
 import LatestAds from './LatestAds';
 import CardStyle1 from '../../components/Card/CardStyle1';
-
-const RecommendationsData = [
-    {
-        id: '1',
-        image: IMAGES.car6,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '2',
-        image: IMAGES.electronics2,
-        title: "HP laptop",
-        price: "$1000.50",
-        location: "La Molina, Peru",
-        trending: true,
-
-    },
-    {
-        id: '3',
-        image: IMAGES.mobile3,
-        title: "Vivo NEX S",
-        price: "$1100.50",
-        location: "La Molina, Peru",
-        trending: true,
-    },
-    {
-        id: '4',
-        image: IMAGES.properties1,
-        title: "Serenity Pines Retreat",
-        price: "$12880.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '5',
-        image: IMAGES.bike1,
-        title: "Yamaha (e.g., YZF-R series, MT series, FZ series)",
-        price: "$1285.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '6',
-        image: IMAGES.car5,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '7',
-        image: IMAGES.furniture2,
-        title: "Coffee table",
-        price: "$1308.50",
-        location: "La Molina, Peru",
-        trending: true,
-    },
-    {
-        id: '8',
-        image: IMAGES.electronics5,
-        title: "Tea machine",
-        price: "$158.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '9',
-        image: IMAGES.bike3,
-        title: "Royal Enfield Bullet 350",
-        price: "$1300.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '10',
-        image: IMAGES.mobile4,
-        title: "iPhone 13 Pro Max (2021)",
-        price: "$130.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '11',
-        image: IMAGES.service3,
-        title: "Audemars Piguet, watch",
-        price: "$1888.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '12',
-        image: IMAGES.properties2,
-        title: "Tranquil Haven Cottage",
-        price: "$12500.50",
-        location: "La Molina, Peru",
-        trending: true,
-    },
-]
+import postsService from '../../../src/services/postsService';
 
 const HomeScreen = ({ navigation }) => {
+  const { colors } = useTheme();
+  const [recommendations, setRecommendations] = useState([]);
+  const [latestAds, setLatestAds] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-    const { colors } = useTheme();
+  const fetchHomeData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch latest ads
+      const latestResponse = await postsService.posts.getAll({
+        perPage: 4,
+        sort: 'newest'
+      });
+      setLatestAds(latestResponse.data?.result?.data || []); // Fallback to empty array
+
+      // Fetch recommendations
+      const recommendationsResponse = await postsService.posts.getAll({
+        sort: 'newest',
+        detailed:1
+      });
+      setRecommendations(recommendationsResponse.data?.result?.data || []); // Fallback to empty array
+      console.log('Recommendations:', recommendationsResponse.data?.result?.data);
+
+    } catch (err) {
+      console.error('Failed to fetch home data:', err);
+      setError(err.message || 'Failed to load data');
+      setRecommendations([]); // Reset to empty array on error
+      setLatestAds([]); // Reset to empty array on error
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchHomeData();
+  };
+
+  useEffect(() => {
+    fetchHomeData();
+  }, []);
+
+  if (loading && !recommendations.length && !latestAds.length) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  if (error && !recommendations.length && !latestAds.length) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: colors.title }}>{error}</Text>
+        <TouchableOpacity 
+          style={{ marginTop: 10, padding: 10, backgroundColor: COLORS.primary, borderRadius: 5 }}
+          onPress={fetchHomeData}
+        >
+          <Text style={{ color: 'white' }}>Retry</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
+  // Safe rendering of recommendations
+  const renderRecommendations = () => {
+    if (!Array.isArray(recommendations)) {
+      return null;
+    }
 
     return (
-        <SafeAreaView
-            style={{
-                flex: 1,
-                backgroundColor: colors.background,
-            }}
-        >
-            <View
-                style={[GlobalStyleSheet.container, { paddingBottom: 5 }]}
-            >
-                <View
-                    style={{
-                        flexDirection: 'row',
-                    }}
-                >
-                    <View
-                        style={{
-                            flex: 1
-                        }}
-                    >
-                        <SearchBar />
-                    </View>
-                    <TouchableOpacity
-                        style={{
-                            padding: 14,
-                            marginLeft: 5,
-                        }}
-                        onPress={() => navigation.openDrawer()}
-                    >
-                        <Image
-                            style={{
-                                height: 20,
-                                width: 20,
-                                resizeMode: 'contain',
-                                tintColor: colors.title,
-                            }}
-                            source={IMAGES.hamburger}
-                        />
-                    </TouchableOpacity>
-                </View>
+      <View style={[GlobalStyleSheet.row]}>
+        {recommendations.map((item, index) => (
+          <View key={`${item.id}-${index}`} style={[GlobalStyleSheet.col50, { marginBottom: 15 }]}>
+            <CardStyle1 
+              item={{
+                id: item.id?.toString() || index.toString(),
+                image: { uri: item.image_url || IMAGES.placeholder },
+                title: item.title || 'No title',
+                price: item.price ? `$${item.price}` : 'Price not available',
+                location: item.location || 'Location not specified',
+                trending: item.trending || false
+              }} 
+            />
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Header and SearchBar */}
+      <View style={[GlobalStyleSheet.container, { paddingBottom: 5 }]}>
+        <View style={{ flexDirection: 'row' }}>
+          <View style={{ flex: 1 }}>
+            <SearchBar />
+          </View>
+          <TouchableOpacity
+            style={{ padding: 14, marginLeft: 5 }}
+            onPress={() => navigation.openDrawer()}
+          >
+            <Image
+              style={{ height: 20, width: 20, resizeMode: 'contain', tintColor: colors.title }}
+              source={IMAGES.hamburger}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Main Content */}
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 80 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primary}
+          />
+        }
+      >
+        <View style={[GlobalStyleSheet.container, { paddingTop: 10, flex: 1 }]}>
+          {/* Categories Section */}
+          <View>
+            <View style={{ flexDirection: 'row', marginBottom: 12 }}>
+              <Text style={{ ...FONTS.font, ...FONTS.fontTitle, color: colors.title, flex: 1 }}>
+                Categories
+              </Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Categories')}
+                style={{ flexDirection: 'row', alignItems: 'center' }}
+              >
+                <Text style={[FONTS.fontSm, { color: COLORS.primary }]}>View all</Text>
+                <FeatherIcon size={16} color={COLORS.primary} name={'chevron-right'} />
+              </TouchableOpacity>
             </View>
-            <ScrollView
-                contentContainerStyle={{
-                    flexGrow: 1,
-                    paddingBottom: 80,
-                }}
-                showsHorizontalScrollIndicator={false}
-            >
-                <View
-                    style={[GlobalStyleSheet.container, { paddingTop: 10, flex: 1 }]}
-                >
-                    <View>
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                marginBottom: 12,
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    ...FONTS.font,
-                                    ...FONTS.fontTitle,
-                                    color: colors.title,
-                                    flex: 1,
-                                }}
-                            >Categories</Text>
-                            <TouchableOpacity
-                                onPress={() => navigation.navigate('Categories')}
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                }}
-                            >
-                                <Text style={[FONTS.fontSm, { color: COLORS.primary }]}>View all</Text>
-                                <FeatherIcon size={16} color={COLORS.primary} name={'chevron-right'} />
-                            </TouchableOpacity>
-                        </View>
+            <CategoryList />
+          </View>
 
-                        <CategoryList />
+          {/* Ads Section */}
+          <View style={{ marginHorizontal: -15, marginTop: 20, flex: 1 }}>
+            <View style={{
+              backgroundColor: colors.card,
+              borderTopLeftRadius: 25,
+              borderTopRightRadius: 25,
+              flex: 1,
+              paddingHorizontal: 15,
+              paddingVertical: 15,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 5 },
+              shadowOpacity: 0.34,
+              shadowRadius: 6.27,
+              elevation: 10,
+            }}>
+              <Text style={[FONTS.h6, { color: colors.title }]}>Latest Ads</Text>
+              <LatestAds data={latestAds} />
 
-                    </View>
-
-                    <View
-                        style={{
-                            marginHorizontal: -15,
-                            marginTop: 20,
-                            flex: 1
-                        }}
-                    >
-                        <View
-                            style={{
-                                backgroundColor: colors.card,
-                                borderTopLeftRadius: 25,
-                                borderTopRightRadius: 25,
-                                flex: 1,
-                                paddingHorizontal: 15,
-                                paddingVertical: 15,
-                                shadowColor: "#000",
-                                shadowOffset: {
-                                    width: 0,
-                                    height: 5,
-                                },
-                                shadowOpacity: 0.34,
-                                shadowRadius: 6.27,
-                                elevation: 10,
-                            }}
-                        >
-                            <Text style={[FONTS.h6, { color: colors.title }]}>Latest Ads</Text>
-
-                            <LatestAds />
-
-                            <Text style={[FONTS.h6, { color: colors.title, marginTop: 8, marginBottom: 10 }]}>Recommendations</Text>
-
-                            <View style={[GlobalStyleSheet.row]}>
-                                {RecommendationsData.map((data, index) => (
-                                    <View
-                                        key={index}
-                                        style={[GlobalStyleSheet.col50, { marginBottom: 15 }]}
-                                    >
-                                        <CardStyle1
-                                            item={data}
-                                        />
-                                    </View>
-                                ))}
-                            </View>
-                        </View>
-                    </View>
-
-                </View>
-            </ScrollView>
-        </SafeAreaView>
-    )
-}
+              <Text style={[FONTS.h6, { color: colors.title, marginTop: 8, marginBottom: 10 }]}>
+                Recommendations
+              </Text>
+              
+              {renderRecommendations()}
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
 
 export default HomeScreen;

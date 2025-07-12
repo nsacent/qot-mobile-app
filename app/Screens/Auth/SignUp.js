@@ -18,37 +18,37 @@ import FeatherIcon from "react-native-vector-icons/Feather";
 import { Checkbox, Modal } from 'react-native-paper';
 import { useTheme } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
-import api from '../../../src/services/api';
+import { ApiService } from '../../../src/services/api';
 
 const useGetIP = () => {
-  const [ipData, setIpData] = useState({
-    ip: '',
-    loading: true,
-    error: null
-  });
+    const [ipData, setIpData] = useState({
+        ip: '',
+        loading: true,
+        error: null
+    });
 
-  useEffect(() => {
-    const fetchIP = async () => {
-      try {
-        const response = await axios.get('https://api.ipify.org?format=json');
-        setIpData({
-          ip: response.data.ip,
-          loading: false,
-          error: null
-        });
-      } catch (error) {
-        setIpData({
-          ip: '',
-          loading: false,
-          error: error.message || 'Failed to fetch IP'
-        });
-      }
-    };
+    useEffect(() => {
+        const fetchIP = async () => {
+            try {
+                const response = await axios.get('https://api.ipify.org?format=json');
+                setIpData({
+                    ip: response.data.ip,
+                    loading: false,
+                    error: null
+                });
+            } catch (error) {
+                setIpData({
+                    ip: '',
+                    loading: false,
+                    error: error.message || 'Failed to fetch IP'
+                });
+            }
+        };
 
-    fetchIP();
-  }, []);
+        fetchIP();
+    }, []);
 
-  return ipData;
+    return ipData;
 };
 
 const SignUp = () => {
@@ -92,15 +92,15 @@ const SignUp = () => {
     });
 
     const handleFocus = (field) => {
-        setFocusStates({...focusStates, [field]: true});
+        setFocusStates({ ...focusStates, [field]: true });
         // Clear error when field is focused
         if (errors[field]) {
-            setErrors(prev => ({...prev, [field]: ''}));
+            setErrors(prev => ({ ...prev, [field]: '' }));
         }
     };
 
     const handleBlur = (field) => {
-        setFocusStates({...focusStates, [field]: false});
+        setFocusStates({ ...focusStates, [field]: false });
         // Validate field on blur
         validateField(field);
     };
@@ -108,8 +108,8 @@ const SignUp = () => {
     const validateField = (field) => {
         let error = '';
         const value = formData[field];
-        
-        switch(field) {
+
+        switch (field) {
             case 'name':
                 if (!value.trim()) error = 'Name is required';
                 else if (value.trim().length < 2) error = 'Name must be at least 2 characters';
@@ -131,12 +131,12 @@ const SignUp = () => {
                 break;
         }
 
-        setErrors(prev => ({...prev, [field]: error}));
+        setErrors(prev => ({ ...prev, [field]: error }));
     };
 
     const validateForm = () => {
         let isValid = true;
-        const newErrors = {...errors};
+        const newErrors = { ...errors };
 
         // Validate all fields
         ['name', 'email', 'password', 'confirmPassword'].forEach(field => {
@@ -158,17 +158,21 @@ const SignUp = () => {
 
     const handleSignUp = async () => {
         Keyboard.dismiss(); // Dismiss keyboard when submitting
-        
+
         if (!validateForm()) {
             Alert.alert('Validation Error', 'Please fix all errors before submitting');
             return;
         }
 
         setLoading(true);
-        setErrors(prev => ({...prev, general: ''}));
-        
+        setErrors(prev => ({ ...prev, general: '' }));
+
         try {
-            const payload = {
+
+            // Prepare data for registration
+
+            const response = await ApiService.register({
+
                 name: formData.name.trim(),
                 email: formData.email.trim().toLowerCase(),
                 password: formData.password,
@@ -177,9 +181,8 @@ const SignUp = () => {
                 auth_field: 'email',
                 password_confirmation: formData.confirmPassword,
                 ...(ip && !ipError && { create_from_ip: ip })
-            };
 
-            const response = await api.post('/users', payload);
+            });
 
             if (response.data && response.data.success) {
                 setShowSuccessSheet(true);
@@ -190,7 +193,7 @@ const SignUp = () => {
         } catch (error) {
             console.error('Registration error:', error);
             let errorMessage = 'Registration failed. Please try again.';
-            
+
             if (error.response) {
                 if (error.response.status === 400) {
                     errorMessage = 'Invalid registration data';
@@ -208,12 +211,12 @@ const SignUp = () => {
                         const fieldName = fieldMap[key] || key;
                         serverErrors[fieldName] = Array.isArray(messages) ? messages.join(' ') : messages;
                     });
-                    setErrors(prev => ({...prev, ...serverErrors}));
+                    setErrors(prev => ({ ...prev, ...serverErrors }));
                     errorMessage = 'Please fix the form errors';
                 }
             }
-            
-            setErrors(prev => ({...prev, general: errorMessage}));
+
+            setErrors(prev => ({ ...prev, general: errorMessage }));
             Alert.alert('Registration Error', errorMessage);
         } finally {
             setLoading(false);
@@ -235,7 +238,7 @@ const SignUp = () => {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-            <ScrollView 
+            <ScrollView
                 ref={scrollViewRef}
                 contentContainerStyle={{ flexGrow: 1 }}
                 keyboardShouldPersistTaps="handled"
@@ -257,7 +260,7 @@ const SignUp = () => {
                     </View>
 
                     {/* Name Field */}
-                    <View 
+                    <View
                         style={GlobalStyleSheet.inputGroup}
                         onLayout={(e) => measureFieldPosition('name', e)}
                     >
@@ -275,7 +278,7 @@ const SignUp = () => {
                                 focusStates.name && GlobalStyleSheet.activeInput
                             ]}
                             value={formData.name}
-                            onChangeText={(text) => setFormData({...formData, name: text})}
+                            onChangeText={(text) => setFormData({ ...formData, name: text })}
                             onFocus={() => handleFocus('name')}
                             onBlur={() => handleBlur('name')}
                             placeholder='Type your full name'
@@ -285,7 +288,7 @@ const SignUp = () => {
                     </View>
 
                     {/* Email Field */}
-                    <View 
+                    <View
                         style={GlobalStyleSheet.inputGroup}
                         onLayout={(e) => measureFieldPosition('email', e)}
                     >
@@ -303,7 +306,7 @@ const SignUp = () => {
                                 focusStates.email && GlobalStyleSheet.activeInput
                             ]}
                             value={formData.email}
-                            onChangeText={(text) => setFormData({...formData, email: text})}
+                            onChangeText={(text) => setFormData({ ...formData, email: text })}
                             onFocus={() => handleFocus('email')}
                             onBlur={() => handleBlur('email')}
                             keyboardType="email-address"
@@ -315,7 +318,7 @@ const SignUp = () => {
                     </View>
 
                     {/* Password Field */}
-                    <View 
+                    <View
                         style={GlobalStyleSheet.inputGroup}
                         onLayout={(e) => measureFieldPosition('password', e)}
                     >
@@ -334,10 +337,10 @@ const SignUp = () => {
                                     opacity: .5,
                                 }}
                             >
-                                <FeatherIcon 
-                                    name={showPassword ? 'eye' : 'eye-off'} 
-                                    color={colors.title} 
-                                    size={18} 
+                                <FeatherIcon
+                                    name={showPassword ? 'eye' : 'eye-off'}
+                                    color={colors.title}
+                                    size={18}
                                 />
                             </TouchableOpacity>
                             <TextInput
@@ -353,7 +356,7 @@ const SignUp = () => {
                                     focusStates.password && GlobalStyleSheet.activeInput
                                 ]}
                                 value={formData.password}
-                                onChangeText={(text) => setFormData({...formData, password: text})}
+                                onChangeText={(text) => setFormData({ ...formData, password: text })}
                                 onFocus={() => handleFocus('password')}
                                 onBlur={() => handleBlur('password')}
                                 secureTextEntry={!showPassword}
@@ -365,7 +368,7 @@ const SignUp = () => {
                     </View>
 
                     {/* Confirm Password Field */}
-                    <View 
+                    <View
                         style={[GlobalStyleSheet.inputGroup, { marginBottom: 5 }]}
                         onLayout={(e) => measureFieldPosition('confirmPassword', e)}
                     >
@@ -384,10 +387,10 @@ const SignUp = () => {
                                     opacity: .5,
                                 }}
                             >
-                                <FeatherIcon 
-                                    name={showConfirmPassword ? 'eye' : 'eye-off'} 
-                                    color={colors.title} 
-                                    size={18} 
+                                <FeatherIcon
+                                    name={showConfirmPassword ? 'eye' : 'eye-off'}
+                                    color={colors.title}
+                                    size={18}
                                 />
                             </TouchableOpacity>
                             <TextInput
@@ -403,7 +406,7 @@ const SignUp = () => {
                                     focusStates.confirmPassword && GlobalStyleSheet.activeInput
                                 ]}
                                 value={formData.confirmPassword}
-                                onChangeText={(text) => setFormData({...formData, confirmPassword: text})}
+                                onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
                                 onFocus={() => handleFocus('confirmPassword')}
                                 onBlur={() => handleBlur('confirmPassword')}
                                 secureTextEntry={!showConfirmPassword}
@@ -415,14 +418,14 @@ const SignUp = () => {
                     </View>
 
                     {/* Terms Checkbox */}
-                    <View 
+                    <View
                         style={{ marginBottom: 15 }}
                         onLayout={(e) => measureFieldPosition('terms', e)}
                     >
                         <Checkbox.Item
                             onPress={() => {
                                 setIsChecked(!isChecked);
-                                if (errors.terms) setErrors(prev => ({...prev, terms: ''}));
+                                if (errors.terms) setErrors(prev => ({ ...prev, terms: '' }));
                             }}
                             position='leading'
                             label="I agree to all Term, Privacy Policy and fees"
@@ -444,8 +447,8 @@ const SignUp = () => {
 
                     {/* General Error */}
                     {errors.general && (
-                        <Text style={{ 
-                            color: COLORS.danger, 
+                        <Text style={{
+                            color: COLORS.danger,
                             textAlign: 'center',
                             marginBottom: 10,
                             ...FONTS.font
@@ -484,50 +487,50 @@ const SignUp = () => {
                     alignItems: 'center'
                 }}
             >
-                <View style={{alignItems:'center',paddingHorizontal:35,paddingVertical:20}}>
+                <View style={{ alignItems: 'center', paddingHorizontal: 35, paddingVertical: 20 }}>
                     <View
                         style={{
-                            alignItems:'center',
-                            justifyContent:'center',
-                            marginBottom:15,
-                            marginTop:10,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: 15,
+                            marginTop: 10,
                         }}
                     >
                         <View
                             style={{
-                                height:80,
-                                width:80,
-                                opacity:.2,
-                                backgroundColor:COLORS.success,
-                                borderRadius:80,
+                                height: 80,
+                                width: 80,
+                                opacity: .2,
+                                backgroundColor: COLORS.success,
+                                borderRadius: 80,
                             }}
                         />
                         <View
                             style={{
-                                height:65,
-                                width:65,
-                                backgroundColor:COLORS.success,
-                                borderRadius:65,
-                                position:'absolute',
-                                alignItems:'center',
-                                justifyContent:'center',
+                                height: 65,
+                                width: 65,
+                                backgroundColor: COLORS.success,
+                                borderRadius: 65,
+                                position: 'absolute',
+                                alignItems: 'center',
+                                justifyContent: 'center',
                             }}
                         >
-                            <FeatherIcon size={32} color={COLORS.white} name="check"/>
+                            <FeatherIcon size={32} color={COLORS.white} name="check" />
                         </View>
                     </View>
-                    <Text style={{...FONTS.h4,color:colors.title,marginBottom:8}}>Congratulations!</Text>
-                    <Text style={{...FONTS.font,color:colors.text,textAlign:'center', marginBottom: 5}}>
+                    <Text style={{ ...FONTS.h4, color: colors.title, marginBottom: 8 }}>Congratulations!</Text>
+                    <Text style={{ ...FONTS.font, color: colors.text, textAlign: 'center', marginBottom: 5 }}>
                         Your account has been created successfully!
                     </Text>
-                    <Text style={{...FONTS.font,color:colors.text,textAlign:'center', marginBottom: 20}}>
+                    <Text style={{ ...FONTS.font, color: colors.text, textAlign: 'center', marginBottom: 20 }}>
                         Please check your email to verify your account before signing in
                     </Text>
                     <CustomButton
                         onPress={handleCloseSheet}
                         title="Continue to Sign In"
                         color={COLORS.primary}
-                        style={{width: '100%'}}
+                        style={{ width: '100%' }}
                     />
                 </View>
             </Modal>

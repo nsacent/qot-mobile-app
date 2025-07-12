@@ -10,7 +10,7 @@ import { AuthContext } from '../../contexts/AuthProvider';
 import { format } from 'date-fns';
 import MyadsSheet from '../../components/BottomSheet/MyadsSheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import postApiService from '../../../src/services/postApiService';
+import postApiService from '../../../src/services/postsService';
 
 const Profile = ({ navigation }) => {
     const { signOut, userData: contextUserData } = useContext(AuthContext);

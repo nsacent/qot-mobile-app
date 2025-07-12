@@ -11,12 +11,12 @@ const CardStyle1 = ({item,list}) => {
 
     const navigation = useNavigation();
 
-    const {price , image , title , location , trending } = item;
+    const {id, price , image , title , location , trending } = item;
     
     return (
         <TouchableOpacity
             activeOpacity={.9}
-            onPress={() => navigation.navigate('ItemDetails')}
+            onPress={() => navigation.navigate('ItemDetails', { itemId: item.id || id })}
         >
             <View
                 style={[{

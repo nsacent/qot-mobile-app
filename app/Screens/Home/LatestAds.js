@@ -1,79 +1,100 @@
-import React from 'react';
-import { View, ScrollView } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, ScrollView, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import CardStyle1 from '../../components/Card/CardStyle1';
-import { IMAGES } from '../../constants/theme';
 import { useTheme } from '@react-navigation/native';
-
-const data = [
-    {
-        id: '1',
-        image: IMAGES.car1,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-        trending: true,
-    },
-    {
-        id: '2',
-        image: IMAGES.mobile4,
-        title: "iPhone 13 Pro Max (2021)",
-        price: "$130.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '3',
-        image: IMAGES.bike4,
-        title: "Royal Enfield Bullet Electra",
-        price: "$1400.50",
-        location: "La Molina, Peru",
-        trending: true,
-    },
-    {
-        id: '4',
-        image: IMAGES.car4,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '5',
-        image: IMAGES.service2,
-        title: "Cannondale bicycle",
-        price: "$125.50",
-        location: "La Molina, Peru",
-        trending: true,
-    },
-    {
-        id: '6',
-        image: IMAGES.service3,
-        title: "Audemars Piguet, watch",
-        price: "$1888.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '7',
-        image: IMAGES.service4,
-        title: "Yamaha, Piano",
-        price: "$12808.50",
-        location: "La Molina, Peru",
-        trending: true,
-    },
-]
-
-// const theme = useTheme();
-// const {colors} = theme;
+import postsService from '../../../src/services/postsService';
+import getImageSource,{ formatPrice } from '../../../src/services/utils';
+import { getCityName } from '../../../src/services/cityService';
+import { AuthContext } from '../../contexts/AuthProvider';
 
 const LatestAds = () => {
+    const theme = useTheme();
+    const colors = theme.colors;
+    const [ads, setAds] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const { userToken } = useContext(AuthContext);
 
-    const { colors } = useTheme();
+    const getName = async (cityId) => {
+        try {
+            const city = await getCityName(cityId, userToken);
+            return city || 'Unknown Location';
+        } catch (error) {
+            console.error('Error fetching city name:', error);
+            return 'Unknown Location';
+        }
+    };
+
+    useEffect(() => {
+        const fetchLatestAds = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                // Fetch latest ads from API
+                const response = await postsService.posts.getAll({
+                    perPage: 5,
+                    sort: 'newest',
+                    embed: 'pictures'
+                });
+
+                // Transform API data
+                console.log('Latest Ads Response:', response);
+
+                const formattedAds = (response?.data?.result?.data || []).map(item => ({
+                    id: item.id?.toString() || Math.random().toString(),
+                    image: getImageSource(item.pictures, 'medium'),
+                    title: item.title || 'No title',
+                    price: formatPrice(item.price, item.currency_code),
+                    location: getName(item.city_id) || 'Location not specified',
+                    trending: true || false
+                }));
+
+                setAds(formattedAds);
+            } catch (err) {
+                console.error('Failed to fetch latest ads:', err);
+                setError(err.message || 'Failed to load ads');
+                setAds([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchLatestAds();
+    }, []);
+
+    if (loading && ads.length === 0) {
+        return (
+            <View style={{ height: 180, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+        );
+    }
+
+    if (error && ads.length === 0) {
+        return (
+            <View style={{ height: 180, justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ color: colors.text, marginBottom: 10 }}>{error}</Text>
+                <TouchableOpacity
+                    onPress={() => {
+                        setError(null);
+                        setLoading(true);
+                        useEffect(() => { }, []); // Retry fetch
+                    }}
+                    style={{
+                        padding: 8,
+                        backgroundColor: colors.primary,
+                        borderRadius: 4
+                    }}
+                >
+                    <Text style={{ color: 'white' }}>Try Again</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
 
     return (
-        <View
-            style={{
-                marginHorizontal: -15,
-                backgroundColor: colors.card,
-            }}
-        >
+        <View style={{ marginHorizontal: -15, backgroundColor: colors.card }}>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -83,9 +104,9 @@ const LatestAds = () => {
                     paddingTop: 10,
                 }}
             >
-                {data.map((item, index) => (
+                {ads.map((item, index) => (
                     <View
-                        key={index}
+                        key={`${item.id}-${index}`}
                         style={{
                             marginRight: 10,
                             width: 160,
@@ -96,7 +117,7 @@ const LatestAds = () => {
                 ))}
             </ScrollView>
         </View>
-    )
-}
+    );
+};
 
 export default React.memo(LatestAds);

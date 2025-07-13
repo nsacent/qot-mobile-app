@@ -149,14 +149,8 @@ export const ApiService = {
     });
   },
 
-  // Listings
-  createListing: (listingData) => api.post(API_ENDPOINTS.LISTINGS.CREATE, listingData),
-  getListings: (params) => api.get(API_ENDPOINTS.LISTINGS.GET_ALL, { params }),
-  searchListings: (query) => api.get(API_ENDPOINTS.LISTINGS.SEARCH, { params: { q: query } }),
-  getListingById: (id) => api.get(API_ENDPOINTS.LISTINGS.BY_ID.replace(':id', id)),
-
   // Categories
-  getCategories: () => api.get(API_ENDPOINTS.CATEGORIES.GET_ALL),
+  getCategories: (params) => api.get(API_ENDPOINTS.CATEGORIES.GET_ALL, {params} ),
 };
 
 export default api;

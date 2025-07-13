@@ -1,108 +1,30 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { FONTS, IMAGES } from '../../constants/theme';
 import { useNavigation, useTheme } from '@react-navigation/native';
-
-
-const categoryData = [
-    {
-        id: '1',
-        icon: IMAGES.cat1,
-        name: 'Cars',
-        navigate: 'CarHome',
-    },
-    {
-        id: '2',
-        icon: IMAGES.cat2,
-        name: 'Mobiles',
-        navigate: 'Mobile',
-    },
-    {
-        id: '3',
-        icon: IMAGES.cat3,
-        name: 'Properties',
-        navigate: 'Properties',
-    },
-    {
-        id: '4',
-        icon: IMAGES.cat4,
-        name: 'Jobs',
-        navigate: 'Jobs',
-    },
-    {
-        id: '5',
-        icon: IMAGES.cat5,
-        name: 'Bikes',
-        navigate: 'Bike',
-    },
-    {
-        id: '6',
-        icon: IMAGES.cat6,
-        name: 'Electornics & Appliances',
-        navigate: 'Electornics',
-    },
-    {
-        id: '7',
-        icon: IMAGES.cat7,
-        name: 'Furniture',
-        navigate: 'Furniture',
-    },
-    {
-        id: '8',
-        icon: IMAGES.cat8,
-        name: 'Fashion',
-        navigate: 'Fashion',
-    },
-    {
-        id: '9',
-        icon: IMAGES.cat9,
-        name: 'Pets',
-        navigate: 'Pets',
-    },
-    {
-        id: '10',
-        icon: IMAGES.cat10,
-        name: 'Books, Sports & Hobbies',
-        navigate: 'Books',
-    },
-    {
-        id: '11',
-        icon: IMAGES.cat11,
-        name: 'Services',
-        navigate: 'Service',
-    },
-]
-
+import { ApiService } from '../../../src/services/api';
 
 const CatItem = ({ item, theme, navigation }) => {
-
     const { colors } = theme;
     return (
-        <View
-            style={{
-                width: 80,
-                marginRight: 5,
-            }}
-        >
+        <View style={{ width: 80, marginRight: 5 }}>
             <TouchableOpacity
-                onPress={() => item.navigate === 'CarHome' ? navigation.navigate('CarHome') : navigation.navigate('Items', { cat: item.navigate })}
-                style={{
-                    alignItems: 'center',
-                }}
+                onPress={() => item.navigate === 'CarHome' 
+                    ? navigation.navigate('CarHome') 
+                    : navigation.navigate('Items', { cat: item.navigate })}
+                style={{ alignItems: 'center' }}
             >
-                <View
-                    style={{
-                        height: 64,
-                        width: 64,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: 20,
-                        backgroundColor:theme.dark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)',
-                        marginBottom: 6,
-                    }}
-                >
+                <View style={{
+                    height: 64,
+                    width: 64,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 20,
+                    backgroundColor: theme.dark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)',
+                    marginBottom: 6,
+                }}>
                     <Image
-                        source={item.icon}
+                        source={{ uri: item.icon || IMAGES.placeholder }}
                         style={{
                             height: 40,
                             width: 40,
@@ -110,45 +32,105 @@ const CatItem = ({ item, theme, navigation }) => {
                         }}
                     />
                 </View>
-                <Text numberOfLines={1} style={[FONTS.fontXs, { color: colors.title }]}>{item.name}</Text>
+                <Text numberOfLines={1} style={[FONTS.fontXs, { color: colors.title }]}>
+                    {item.name}
+                </Text>
             </TouchableOpacity>
         </View>
-    )
-}
+    );
+};
 
 const CategoryList = () => {
-
     const theme = useTheme();
     const navigation = useNavigation();
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const renderItem = ({ item }) => {
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                
+                // Fetch categories from API
+                const response = await ApiService.getCategories();
+
+                console.log('Categories Response:', response);
+
+                // Transform API data to match component expectations
+                const formattedCategories = response.data.result.data.map(category => ({
+                    id: category.id.toString(),
+                    icon: category.image_url || IMAGES.placeholder,
+                    name: category.name || 'Category',
+                    navigate: category.slug || 'Items'
+                }));
+
+                const reversedCategories = formattedCategories.reverse();
+                setCategories(reversedCategories.slice(0, 10)); // Limit to 10 categories
+
+            } catch (err) {
+                console.error('Failed to fetch categories:', err);
+                setError(err.message || 'Failed to load categories');
+                // Fallback to default categories if API fails
+                setCategories(getDefaultCategories());
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
+    // Default categories in case API fails
+    
+
+    const renderItem = ({ item }) => (
+        <CatItem item={item} theme={theme} navigation={navigation} />
+    );
+
+    if (loading && categories.length === 0) {
         return (
-            <CatItem
-                item={item}
-                theme={theme}
-                navigation={navigation}
-            />
+            <View style={{ height: 100, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+            </View>
         );
-    };
+    }
+
+    if (error && categories.length === 0) {
+        return (
+            <View style={{ height: 100, justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ color: theme.colors.text, marginBottom: 10 }}>{error}</Text>
+                <TouchableOpacity 
+                    onPress={() => {
+                        setError(null);
+                        setLoading(true);
+                        useEffect(() => {}, []); // Retry fetch
+                    }}
+                    style={{ 
+                        padding: 8,
+                        backgroundColor: theme.colors.primary,
+                        borderRadius: 4
+                    }}
+                >
+                    <Text style={{ color: 'white' }}>Try Again</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
 
     return (
-        <View
-            style={{
-                marginHorizontal: -15,
-            }}
-        >
+        <View style={{ marginHorizontal: -15 }}>
             <FlatList
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                data={categoryData}
+                data={categories}
                 keyExtractor={(item) => item.id}
                 renderItem={renderItem}
-                contentContainerStyle={{
-                    paddingLeft: 15,
-                }}
+                contentContainerStyle={{ paddingLeft: 15 }}
             />
         </View>
-    )
-}
+    );
+};
 
 export default React.memo(CategoryList);

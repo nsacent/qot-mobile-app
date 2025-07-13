@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Image,
   SafeAreaView,
@@ -18,6 +18,9 @@ import CategoryList from './CategoryList';
 import LatestAds from './LatestAds';
 import CardStyle1 from '../../components/Card/CardStyle1';
 import postsService from '../../../src/services/postsService';
+import getImageSource,{formatPrice} from '../../../src/services/utils';
+import { AuthContext } from '../../contexts/AuthProvider';
+import { getCityName } from '../../../src/services/cityService';
 
 const HomeScreen = ({ navigation }) => {
   const { colors } = useTheme();
@@ -26,6 +29,7 @@ const HomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const { userToken } = useContext(AuthContext);
 
   const fetchHomeData = async () => {
     try {
@@ -44,8 +48,12 @@ const HomeScreen = ({ navigation }) => {
         sort: 'newest',
         detailed:1
       });
-      setRecommendations(recommendationsResponse.data?.result?.data || []); // Fallback to empty array
+      const reversedRecomendations = recommendationsResponse.data?.result?.data.reverse() || [];
+      setRecommendations(reversedRecomendations); // Limit to 4 recommendations
+     // setRecommendations(recommendationsResponse.data?.result?.data || []); // Fallback to empty array
       console.log('Recommendations:', recommendationsResponse.data?.result?.data);
+      console.log('AuthTOKEN:', userToken);
+
 
     } catch (err) {
       console.error('Failed to fetch home data:', err);
@@ -89,6 +97,16 @@ const HomeScreen = ({ navigation }) => {
     );
   }
 
+  const getName= async(cityId) => {
+    try {
+      const city = await getCityName(cityId, userToken);
+      return city || 'Unknown Location';
+    } catch (error) {
+      console.error('Error fetching city name:', error);
+      return 'Unknown Location';
+    }
+  };
+
   // Safe rendering of recommendations
   const renderRecommendations = () => {
     if (!Array.isArray(recommendations)) {
@@ -102,10 +120,11 @@ const HomeScreen = ({ navigation }) => {
             <CardStyle1 
               item={{
                 id: item.id?.toString() || index.toString(),
-                image: { uri: item.image_url || IMAGES.placeholder },
+                image: getImageSource(item.pictures),
                 title: item.title || 'No title',
-                price: item.price ? `$${item.price}` : 'Price not available',
-                location: item.location || 'Location not specified',
+                price: formatPrice(item.price, item.currency_code),
+                location: getName(item.city_id) || 'Location not specified',
+                //location:'Kampala, Uganda',
                 trending: item.trending || false
               }} 
             />

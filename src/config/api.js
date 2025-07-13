@@ -45,8 +45,8 @@ export const API_ENDPOINTS = {
   POSTS: {
     CREATE: '/posts',
     GET_ALL: '/posts',
-    SEARCH: '/listings/search',
-    BY_ID: '/listings/:id',
+    SEARCH: '/posts/search',
+    BY_ID: '/posts/:id',
   },
   
   

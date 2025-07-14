@@ -111,13 +111,13 @@ api.interceptors.response.use(
           STORAGE_KEYS.REFRESH_TOKEN,
           STORAGE_KEYS.USER_DATA,
         ]);
-        
+
         // You might want to navigate to login screen here
         // navigationRef.navigate('Auth');
 
         navigate('SignIn'); // ✅ Go to login screen
 
-        
+
         error.message = API_ERRORS.UNAUTHORIZED;
         return Promise.reject(error);
       }
@@ -128,6 +128,15 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+
+const replaceParams = (path, params) => {
+  let result = path;
+  Object.entries(params).forEach(([key, value]) => {
+    result = result.replace(`:${key}`, value);
+  });
+  return result;
+};
 
 // API Methods
 export const ApiService = {
@@ -150,7 +159,16 @@ export const ApiService = {
   },
 
   // Categories
-  getCategories: (params) => api.get(API_ENDPOINTS.CATEGORIES.GET_ALL, {params} ),
+  getCategories: (params) => api.get(API_ENDPOINTS.CATEGORIES.GET_ALL, { params }),
+
+  // Favorates
+
+  doLike: ((params = {}) => {
+    const queryParams = { ...params };
+    return api.post(replaceParams(API_ENDPOINTS.FAVOURATES.GET_ALL,{params:queryParams}))
+  }),
+
+  unlike:  (ids) => api.delete(`/savedPosts/${Array.isArray(ids) ? ids.join(',') : ids}`),
 };
 
 export default api;

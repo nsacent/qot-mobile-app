@@ -9,8 +9,8 @@ const CatItem = ({ item, theme, navigation }) => {
     return (
         <View style={{ width: 80, marginRight: 5 }}>
             <TouchableOpacity
-                onPress={() => item.navigate === 'CarHome' 
-                    ? navigation.navigate('CarHome') 
+                onPress={() => item.navigate === 'CarHome'
+                    ? navigation.navigate('CarHome')
                     : navigation.navigate('Items', { cat: item.navigate })}
                 style={{ alignItems: 'center' }}
             >
@@ -52,7 +52,7 @@ const CategoryList = () => {
             try {
                 setLoading(true);
                 setError(null);
-                
+
                 // Fetch categories from API
                 const response = await ApiService.getCategories();
 
@@ -83,7 +83,7 @@ const CategoryList = () => {
     }, []);
 
     // Default categories in case API fails
-    
+
 
     const renderItem = ({ item }) => (
         <CatItem item={item} theme={theme} navigation={navigation} />
@@ -101,17 +101,13 @@ const CategoryList = () => {
         return (
             <View style={{ height: 100, justifyContent: 'center', alignItems: 'center' }}>
                 <Text style={{ color: theme.colors.text, marginBottom: 10 }}>{error}</Text>
-                <TouchableOpacity 
-                    onPress={() => {
-                        setError(null);
-                        setLoading(true);
-                        useEffect(() => {}, []); // Retry fetch
+                <TouchableOpacity
+                    onPress={() => item.navigate === 'CarHome' ? navigation.navigate('CarHome') : navigation.navigate('Items', 
+                        { cat: item.navigate })}
+                    style={{
+                        alignItems: 'center',
                     }}
-                    style={{ 
-                        padding: 8,
-                        backgroundColor: theme.colors.primary,
-                        borderRadius: 4
-                    }}
+ßßßßß
                 >
                     <Text style={{ color: 'white' }}>Try Again</Text>
                 </TouchableOpacity>

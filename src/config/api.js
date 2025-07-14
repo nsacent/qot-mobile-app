@@ -49,6 +49,14 @@ export const API_ENDPOINTS = {
     BY_ID: '/posts/:id',
   },
   
+  FAVOURATES: {
+    GET_ALL: '/savedPosts',
+    BY_ID: '/savedPosts/:id',
+  },
+  
+  CITIES: {
+    BY_ID: '/cities/:id',
+  },
   
   CATEGORIES: {
     GET_ALL: '/categories',

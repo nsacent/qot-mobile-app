@@ -1,4 +1,4 @@
- 
+
 
 import React, { useState, useEffect, useContext } from 'react';
 import { View, SafeAreaView, ScrollView, Image, TouchableOpacity, Text, Share, StyleSheet, Platform, ActivityIndicator, Linking } from 'react-native';
@@ -15,6 +15,8 @@ import Button from '../../components/Button/Button';
 import Anotherprofile from '../profile/Anotherprofile';
 import { AuthContext } from '../../contexts/AuthProvider';
 import axios from 'axios';
+import postsService from '../../../src/services/postsService';
+import { ApiService } from '../../../src/services/api';
 
 const API_BASE_URL = 'https://qot.ug/api';
 
@@ -23,7 +25,7 @@ const ItemDetails = ({ navigation, route }) => {
     const { userToken } = useContext(AuthContext);
     const theme = useTheme();
     const { colors } = theme;
-    
+
     // States
     const [loading, setLoading] = useState(true);
     const [item, setItem] = useState(null);
@@ -36,21 +38,15 @@ const ItemDetails = ({ navigation, route }) => {
         const fetchItemDetails = async () => {
             try {
                 setLoading(true);
-                const headers = {
-                    'Authorization': `Bearer ${userToken}`,
-                    'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=',
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                };
+                
 
                 // Fetch item details with embedded relationships
-                const itemResponse = await axios.get(
-                    `${API_BASE_URL}/posts/${itemId}?embed=user,postType,city,pictures,savedByLoggedUser,category,fieldsValues`,
-                    { headers }
-                );
-                
+                const itemResponse = await postsService.posts.getById(itemId,{detailed:1});
+
                 const itemData = itemResponse.data.result;
-                
+
+                console.log(ItemDetails);
+
                 setItem({
                     ...itemData,
                     priceFormatted: itemData.price_formatted || formatPrice(itemData.price, itemData.currency_code),
@@ -65,7 +61,7 @@ const ItemDetails = ({ navigation, route }) => {
                 setIsLiked(itemData.savedByLoggedUser || false);
 
                 // Fetch similar items from same category
-                if (itemData.category_id) {
+                /*if (itemData.category_id) {
                     const similarResponse = await axios.get(
                         `${API_BASE_URL}/posts?category=${itemData.category_id}&perPage=4&embed=pictures`,
                         { headers }
@@ -74,7 +70,8 @@ const ItemDetails = ({ navigation, route }) => {
                         ...item,
                         priceFormatted: item.price_formatted || formatPrice(item.price, item.currency_code)
                     })));
-                }
+                }*/
+
             } catch (error) {
                 console.error('Error fetching item details:', error);
             } finally {
@@ -96,7 +93,7 @@ const ItemDetails = ({ navigation, route }) => {
 
     const onShare = async () => {
         try {
-            setIsProcessing(true);
+            // setIsProcessing(true);
             const result = await Share.share({
                 message: `Check out this item: ${item.title} - ${item.price_formatted}`,
                 url: item.url || `https://qot.ug/items/${itemId}`,
@@ -108,21 +105,21 @@ const ItemDetails = ({ navigation, route }) => {
         }
     };
 
+
     const toggleLike = async () => {
         try {
             setIsProcessing(true);
-            const headers = {
-                'Authorization': `Bearer ${userToken}`,
-                'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=',
-                'Content-Type': 'application/json'
-            };
 
             if (isLiked) {
-                await axios.delete(`${API_BASE_URL}/savedPosts/${itemId}`, { headers });
+                //await axios.delete(`${API_BASE_URL}/savedPosts/${itemId}`, { headers });
+                await ApiService.unlike({post_id:itemId});
             } else {
-                await axios.post(`${API_BASE_URL}/savedPosts`, { post_id: itemId }, { headers });
+                //await axios.post(`${API_BASE_URL}/savedPosts`, { post_id: itemId }, { headers });
+                await ApiService.doLike(itemId);
             }
+
             setIsLiked(!isLiked);
+
         } catch (error) {
             console.error('Like error:', error);
         } finally {
@@ -138,13 +135,13 @@ const ItemDetails = ({ navigation, route }) => {
                 'X-AppApiToken': 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=',
                 'Content-Type': 'application/json'
             };
-            
+
             await axios.post(`${API_BASE_URL}/reports`, {
                 post_id: itemId,
                 report_type: 'spam',
                 message: 'I want to report this item'
             }, { headers });
-            
+
             alert('Item reported successfully');
         } catch (error) {
             console.error('Report error:', error);
@@ -155,7 +152,7 @@ const ItemDetails = ({ navigation, route }) => {
     };
 
     const handleMakeOffer = () => {
-        navigation.navigate('MakeOffer', { 
+        navigation.navigate('MakeOffer', {
             itemId,
             sellerId: item.user_id,
             itemTitle: item.title,
@@ -164,7 +161,7 @@ const ItemDetails = ({ navigation, route }) => {
     };
 
     const handleChat = () => {
-        navigation.navigate('Chat', { 
+        navigation.navigate('Chat', {
             recipientId: item.user_id,
             itemId,
             itemTitle: item.title,
@@ -191,16 +188,16 @@ const ItemDetails = ({ navigation, route }) => {
     }
 
     // Get images for swiper - use pictures array if available, otherwise use main picture
-    const itemImages = item.pictures && item.pictures.length > 0 
+    const itemImages = item.pictures && item.pictures.length > 0
         ? item.pictures.map(pic => ({ uri: pic.url.large }))
-        : item.picture 
-            ? [{ uri: item.picture.url.large }] 
+        : item.picture
+            ? [{ uri: item.picture.url.large }]
             : [IMAGES.detail1];
 
     // Render car specifications from fieldsValues
     const renderSpecifications = () => {
         if (!item.extra?.fieldsValues) return null;
-        
+
         const specs = [];
         for (const key in item.extra.fieldsValues) {
             const field = item.extra.fieldsValues[key];
@@ -215,7 +212,7 @@ const ItemDetails = ({ navigation, route }) => {
                 </View>
             );
         }
-        
+
         return (
             <View style={{ marginTop: 15 }}>
                 <Text style={[FONTS.fontSm, FONTS.fontMedium, { color: colors.title, marginBottom: 8 }]}>
@@ -273,7 +270,7 @@ const ItemDetails = ({ navigation, route }) => {
                                 </View>
                             ))}
                         </Swiper>
-                        
+
                         {/* Header Actions */}
                         <View style={[GlobalStyleSheet.container, {
                             position: 'absolute',
@@ -310,11 +307,7 @@ const ItemDetails = ({ navigation, route }) => {
                                 onPress={onShare}
                                 disabled={isProcessing}
                             >
-                                {isProcessing ? (
-                                    <ActivityIndicator size="small" color={COLORS.white} />
-                                ) : (
-                                    <FeatherIcon size={20} color={COLORS.white} name="share-2" />
-                                )}
+                                <FeatherIcon size={20} color={COLORS.white} name="share-2" />
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={{
@@ -331,11 +324,13 @@ const ItemDetails = ({ navigation, route }) => {
                                 {isProcessing ? (
                                     <ActivityIndicator size="small" color={COLORS.white} />
                                 ) : (
-                                    <FeatherIcon 
-                                        size={20} 
-                                        color={isLiked ? COLORS.primary : COLORS.white} 
-                                        name={isLiked ? "heart" : "heart-o"} 
+                                    <FeatherIcon
+                                        size={20}
+                                        color={isLiked ? COLORS.primary : COLORS.white}
+                                        name="heart"
+                                        fill={isLiked ? COLORS.primary : COLORS.white}
                                     />
+
                                 )}
                             </TouchableOpacity>
                         </View>
@@ -354,7 +349,7 @@ const ItemDetails = ({ navigation, route }) => {
                         <Text style={[FONTS.h5, { color: colors.title, marginBottom: 10 }]}>
                             {item.price_formatted}
                         </Text>
-                        
+
                         {/* Basic Info */}
                         <View style={{ width: '100%', borderWidth: 1, borderRadius: 10, borderColor: colors.borderColor, padding: 15 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' }}>

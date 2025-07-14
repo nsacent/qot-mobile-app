@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { View, SafeAreaView, TouchableOpacity, Image, ScrollView, Text, FlatList } from 'react-native';
+import React, { useState, useRef, useEffect, useContext } from 'react';
+import { View, SafeAreaView, TouchableOpacity, Image, ScrollView, Text, ActivityIndicator, FlatList } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import Octicons from 'react-native-vector-icons/Octicons';
@@ -10,1077 +10,130 @@ import CardStyle1 from '../../components/Card/CardStyle1';
 import FilterSheet from '../../components/BottomSheet/FilterSheet';
 import ShortfilterSheet from '../../components/BottomSheet/ShortfilterSheet';
 import SortbySheet from '../../components/BottomSheet/SortbySheet';
-
-const ItemData = [
-    {
-        id: '1',
-        image: IMAGES.car6,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '2',
-        image: IMAGES.car5,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-        trending: true,
-    },
-    {
-        id: '3',
-        image: IMAGES.car4,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-        trending: true,
-    },
-    {
-        id: '4',
-        image: IMAGES.car3,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '5',
-        image: IMAGES.car2,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '6',
-        image: IMAGES.car1,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '7',
-        image: IMAGES.car6,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-        trending: true,
-    },
-    {
-        id: '8',
-        image: IMAGES.car5,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '9',
-        image: IMAGES.car4,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '10',
-        image: IMAGES.car3,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '11',
-        image: IMAGES.car2,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-    },
-    {
-        id: '12',
-        image: IMAGES.car1,
-        title: "NIKON CORPORATION, NIKON D5500",
-        price: "$1288.50",
-        location: "La Molina, Peru",
-    },
-]
-
-const Data = {
-    car: [
-        {
-            id: '1',
-            image: IMAGES.car6,
-            title: "NIKON CORPORATION, NIKON D5500",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.car5,
-            title: "NIKON CORPORATION, NIKON D5500",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.car4,
-            title: "NIKON CORPORATION, NIKON D5500",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.car3,
-            title: "NIKON CORPORATION, NIKON D5500",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.car2,
-            title: "NIKON CORPORATION, NIKON D5500",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.car1,
-            title: "NIKON CORPORATION, NIKON D5500",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '7',
-            image: IMAGES.car6,
-            title: "NIKON CORPORATION, NIKON D5500",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '8',
-            image: IMAGES.car5,
-            title: "NIKON CORPORATION, NIKON D5500",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '9',
-            image: IMAGES.car4,
-            title: "NIKON CORPORATION, NIKON D5500",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '10',
-            image: IMAGES.car3,
-            title: "NIKON CORPORATION, NIKON D5500",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '11',
-            image: IMAGES.car2,
-            title: "NIKON CORPORATION, NIKON D5500",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '12',
-            image: IMAGES.car1,
-            title: "NIKON CORPORATION, NIKON D5500",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-        },
-    ],
-    Mobile: [
-        {
-            id: '1',
-            image: IMAGES.mobile1,
-            title: "Vivo X60 Pro",
-            price: "$100.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.mobile2,
-            title: "iPhone 12 Pro (2020)",
-            price: "$1250.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.mobile3,
-            title: "Vivo NEX S",
-            price: "$1100.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.mobile4,
-            title: "iPhone 13 Pro Max (2021)",
-            price: "$130.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.mobile5,
-            title: "Oppo Find X3 Pro",
-            price: "$140.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.mobile6,
-            title: "Oppo F19 Pro+",
-            price: "$1658.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '1',
-            image: IMAGES.mobile1,
-            title: "Vivo X60 Pro",
-            price: "$100.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.mobile2,
-            title: "iPhone 12 Pro (2020)",
-            price: "$1250.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.mobile3,
-            title: "Vivo NEX S",
-            price: "$1100.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.mobile4,
-            title: "iPhone 13 Pro Max (2021)",
-            price: "$130.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.mobile5,
-            title: "Oppo Find X3 Pro",
-            price: "$140.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.mobile6,
-            title: "Oppo F19 Pro+",
-            price: "$1658.50",
-            location: "La Molina, Peru",
-        },
-    ],
-    Properties: [
-        {
-            id: '1',
-            image: IMAGES.properties1,
-            title: "Serenity Pines Retreat",
-            price: "$12880.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.properties2,
-            title: "Tranquil Haven Cottage",
-            price: "$12500.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.properties3,
-            title: "Sunburst Villa",
-            price: "$13000.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.properties4,
-            title: "Enchanted Ivy Chalet",
-            price: "$18000.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.properties5,
-            title: "Harmony Hillside Lodge",
-            price: "$14500.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.properties6,
-            title: "Whispering Willow Manor",
-            price: "$766510.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '1',
-            image: IMAGES.properties1,
-            title: "Serenity Pines Retreat",
-            price: "$12880.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.properties2,
-            title: "Tranquil Haven Cottage",
-            price: "$12500.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.properties3,
-            title: "Sunburst Villa",
-            price: "$13000.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.properties4,
-            title: "Enchanted Ivy Chalet",
-            price: "$18000.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.properties5,
-            title: "Harmony Hillside Lodge",
-            price: "$14500.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.properties6,
-            title: "Whispering Willow Manor",
-            price: "$766510.50",
-            location: "La Molina, Peru",
-        },
-    ],
-    Jobs: [
-        {
-            id: '1',
-            image: IMAGES.jobs1,
-            title: "Data Entry Clerk",
-            price: "$100 - $120",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.jobs2,
-            title: "Information Processing Assistant",
-            price: "$80 - $110",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.jobs3,
-            title: "Word Processor",
-            price: "$180 - $200",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.jobs4,
-            title: "Web Developer",
-            price: "$130 - $150",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.jobs5,
-            title: "Software Engineer",
-            price: "$150 - $200",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.jobs6,
-            title: "Technical Lead",
-            price: "$80 - $120",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '1',
-            image: IMAGES.jobs1,
-            title: "Data Entry Clerk",
-            price: "$100 - $120",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.jobs2,
-            title: "Information Processing Assistant",
-            price: "$80 - $110",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.jobs3,
-            title: "Word Processor",
-            price: "$180 - $200",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.jobs4,
-            title: "Web Developer",
-            price: "$130 - $150",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.jobs5,
-            title: "Software Engineer",
-            price: "$150 - $200",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.jobs6,
-            title: "Technical Lead",
-            price: "$80 - $120",
-            location: "La Molina, Peru",
-        },
-    ],
-    Bike: [
-        {
-            id: '1',
-            image: IMAGES.bike1,
-            title: "Yamaha (e.g., YZF-R series, MT series, FZ series)",
-            price: "$1285.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.bike2,
-            title: "Suzuki (e.g., GSX series, Hayabusa, V-Strom)",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.bike3,
-            title: "Royal Enfield Bullet 350",
-            price: "$1300.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.bike4,
-            title: "Royal Enfield Bullet Electra",
-            price: "$1400.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.bike5,
-            title: "KTM (e.g., Duke series, Adventure series)",
-            price: "$1550.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.bike6,
-            title: "Royal Enfield (e.g., Classic, Bullet, Himalayan)",
-            price: "$10000.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '1',
-            image: IMAGES.bike1,
-            title: "Yamaha (e.g., YZF-R series, MT series, FZ series)",
-            price: "$1285.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.bike2,
-            title: "Suzuki (e.g., GSX series, Hayabusa, V-Strom)",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.bike3,
-            title: "Royal Enfield Bullet 350",
-            price: "$1300.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.bike4,
-            title: "Royal Enfield Bullet Electra",
-            price: "$1400.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.bike5,
-            title: "KTM (e.g., Duke series, Adventure series)",
-            price: "$1550.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.bike6,
-            title: "Royal Enfield (e.g., Classic, Bullet, Himalayan)",
-            price: "$10000.50",
-            location: "La Molina, Peru",
-        },
-    ],
-    Electornics: [
-        {
-            id: '1',
-            image: IMAGES.electronics1,
-            title: " numerous washing machine LG",
-            price: "$1352.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.electronics2,
-            title: "HP laptop",
-            price: "$1000.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.electronics3,
-            title: "DJI (Dà-Jiāng Innovations Science and Technology Co., Ltd.)",
-            price: "$1088.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.electronics4,
-            title: "LG microwave ovens",
-            price: "$1588.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.electronics5,
-            title: "Tea machine",
-            price: "$158.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.electronics6,
-            title: "LG fane",
-            price: "$128.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '1',
-            image: IMAGES.electronics1,
-            title: " numerous washing machine LG",
-            price: "$1352.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.electronics2,
-            title: "HP laptop",
-            price: "$1000.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.electronics3,
-            title: "DJI (Dà-Jiāng Innovations Science and Technology Co., Ltd.)",
-            price: "$1088.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.electronics4,
-            title: "LG microwave ovens",
-            price: "$1588.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.electronics5,
-            title: "Tea machine",
-            price: "$158.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.electronics6,
-            title: "LG fane",
-            price: "$128.50",
-            location: "La Molina, Peru",
-        },
-    ],
-    Furniture: [
-        {
-            id: '1',
-            image: IMAGES.furniture1,
-            title: "Sofa",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.furniture2,
-            title: "Coffee table",
-            price: "$1308.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.furniture3,
-            title: "Nightstand",
-            price: "$1208.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.furniture4,
-            title: "Office table",
-            price: "$1118.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.furniture5,
-            title: "Dining table",
-            price: "$1508.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.furniture6,
-            title: "Vanity table",
-            price: "$1808.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '1',
-            image: IMAGES.furniture1,
-            title: "Sofa",
-            price: "$1288.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.furniture2,
-            title: "Coffee table",
-            price: "$1308.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.furniture3,
-            title: "Nightstand",
-            price: "$1208.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.furniture4,
-            title: "Office table",
-            price: "$1118.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.furniture5,
-            title: "Dining table",
-            price: "$1508.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.furniture6,
-            title: "Vanity table",
-            price: "$1808.50",
-            location: "La Molina, Peru",
-        },
-    ],
-    Fashion: [
-        {
-            id: '1',
-            image: IMAGES.faction1,
-            title: "Leather Jacket",
-            price: "$120.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.faction2,
-            title: "Jackets",
-            price: "$130.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.faction3,
-            title: "Zara T-shirt",
-            price: "$155.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.faction4,
-            title: "Denim short",
-            price: "$150.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.faction5,
-            title: "Boys jeans",
-            price: "$113.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.faction6,
-            title: "Trench Coat",
-            price: "$1280.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '1',
-            image: IMAGES.faction1,
-            title: "Leather Jacket",
-            price: "$120.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.faction2,
-            title: "Jackets",
-            price: "$130.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.faction3,
-            title: "Zara T-shirt",
-            price: "$155.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.faction4,
-            title: "Denim short",
-            price: "$150.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.faction5,
-            title: "Boys jeans",
-            price: "$113.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.faction6,
-            title: "Trench Coat",
-            price: "$1280.50",
-            location: "La Molina, Peru",
-        },
-    ],
-    Pets: [
-        {
-            id: '1',
-            image: IMAGES.pet1,
-            title: "Bulldog (English Bulldog, French Bulldog)",
-            price: "$1280.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.pet2,
-            title: "Scottish Fold, Cat",
-            price: "$1100.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.pet3,
-            title: "Monkey Shoulder: A brand of blended malt Scotch whisky.",
-            price: "$14000.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.pet4,
-            title: "Houres",
-            price: "$12500.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.pet5,
-            title: "Robin brid",
-            price: "$150.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.pet6,
-            title: "Ostrich parrot",
-            price: "$1300.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '1',
-            image: IMAGES.pet1,
-            title: "Bulldog (English Bulldog, French Bulldog)",
-            price: "$1280.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.pet2,
-            title: "Scottish Fold, Cat",
-            price: "$1100.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.pet3,
-            title: "Monkey Shoulder: A brand of blended malt Scotch whisky.",
-            price: "$14000.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.pet4,
-            title: "Houres",
-            price: "$12500.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.pet5,
-            title: "Robin brid",
-            price: "$150.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.pet6,
-            title: "Ostrich parrot",
-            price: "$1300.50",
-            location: "La Molina, Peru",
-        },
-    ],
-    Books: [
-        {
-            id: '1',
-            image: IMAGES.books1,
-            title: "'Midnight's Children' by Salman Rushdie",
-            price: "$125.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.books2,
-            title: "'The God of Small Things' by Arundhati Roy",
-            price: "$110.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.books3,
-            title: "'The White Tiger' by Aravind Adiga",
-            price: "$108.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.books4,
-            title: "'Train to Pakistan' by Khushwant Singh",
-            price: "$105.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.books5,
-            title: "'The Discovery of India' by Jawaharlal Nehru",
-            price: "$150.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.books6,
-            title: "'Interpreter of Maladies' by Jhumpa Lahiri",
-            price: "$178.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '1',
-            image: IMAGES.books1,
-            title: "'Midnight's Children' by Salman Rushdie",
-            price: "$125.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.books2,
-            title: "'The God of Small Things' by Arundhati Roy",
-            price: "$110.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.books3,
-            title: "'The White Tiger' by Aravind Adiga",
-            price: "$108.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.books4,
-            title: "'Train to Pakistan' by Khushwant Singh",
-            price: "$105.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '5',
-            image: IMAGES.books5,
-            title: "'The Discovery of India' by Jawaharlal Nehru",
-            price: "$150.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '6',
-            image: IMAGES.books6,
-            title: "'Interpreter of Maladies' by Jhumpa Lahiri",
-            price: "$178.50",
-            location: "La Molina, Peru",
-        },
-    ],
-    Service: [
-        {
-            id: '1',
-            image: IMAGES.service1,
-            title: "pincle droing (Dog)",
-            price: "$1308.50",
-            location: "La Molina, Peru",
-        },
-        {
-            id: '2',
-            image: IMAGES.service2,
-            title: "Cannondale bicycle",
-            price: "$125.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '3',
-            image: IMAGES.service3,
-            title: "Audemars Piguet, watch",
-            price: "$1888.50",
-            location: "La Molina, Peru",
-            trending: true,
-        },
-        {
-            id: '4',
-            image: IMAGES.service4,
-            title: "Yamaha, Piano",
-            price: "$12808.50",
-            location: "La Molina, Peru",
-        },
-    ],
-}
-
+import postsService from '../../../src/services/postsService';
+import { formatPrice } from '../../../src/services/utils';
+import { AuthContext} from '../../contexts/AuthProvider';
 
 const Items = ({ route, navigation }) => {
-
-    const { cat } = route.params;
-
+    const { cat } = route.params || {};
     const { colors } = useTheme();
+    const { userToken } = useContext(AuthContext);
 
     const [layout, setLayout] = useState('grid');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [items, setItems] = useState([]);
+    const [refreshing, setRefreshing] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+
+    const sheetRef = useRef();
+    const moreRef = useRef();
+    const openRef = useRef();
+
+    const fetchItems = async (pageNum = 1, refresh = false) => {
+        try {
+            if (refresh) {
+                setRefreshing(true);
+                setPage(1);
+            } else {
+                setLoading(true);
+            }
+            
+            setError(null);
+
+            const response = await postsService.posts.getAll({
+                category_id: cat.id,
+                perPage: 12,
+                sort: 'created_at',
+                embed: 'pictures,city',
+                page: pageNum
+            });
+
+            const newItems = response.data?.result?.data || [];
+            
+            if (refresh) {
+                setItems(newItems);
+            } else {
+                setItems(prevItems => [...prevItems, ...newItems]);
+            }
+
+            // Check if there are more pages
+            setHasMore(pageNum < response.data?.result?.meta?.last_page);
+        } catch (err) {
+            console.error('Failed to fetch items:', err);
+            setError(err.message || 'Failed to load items');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    const onRefresh = () => {
+        fetchItems(1, true);
+    };
+
+    const loadMore = () => {
+        if (!loading && hasMore) {
+            setPage(prevPage => {
+                const nextPage = prevPage + 1;
+                fetchItems(nextPage);
+                return nextPage;
+            });
+        }
+    };
+
+    useEffect(() => {
+        if (cat?.id) {
+            fetchItems();
+        }
+    }, [cat]);
 
     const handleLayout = (val) => {
         setLayout(val);
+    };
+
+    const renderFooter = () => {
+        if (!loading) return null;
+        return (
+            <View style={{ paddingVertical: 20 }}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+            </View>
+        );
+    };
+
+    if (loading && !items.length) {
+        return (
+            <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+            </SafeAreaView>
+        );
     }
 
-    const sheetRef = useRef();
-
-    const moreRef = useRef();
-
-    const openRef = useRef();
+    if (error && !items.length) {
+        return (
+            <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ color: colors.title }}>{error}</Text>
+                <TouchableOpacity 
+                    style={{ marginTop: 10, padding: 10, backgroundColor: COLORS.primary, borderRadius: 5 }}
+                    onPress={onRefresh}
+                >
+                    <Text style={{ color: 'white' }}>Retry</Text>
+                </TouchableOpacity>
+            </SafeAreaView>
+        );
+    }
 
     return (
-        <SafeAreaView
-            style={{
-                flex: 1,
-                backgroundColor: colors.background
-            }}
-        >
-            <View
-                style={[GlobalStyleSheet.container, { paddingBottom: 5 }]}
-            >
-                <View
-                    style={{
-                        flexDirection: 'row',
-                    }}
-                >
-                    <View
-                        style={{
-                            flex: 1
-                        }}
-                    >
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+            <View style={[GlobalStyleSheet.container, { paddingBottom: 5 }]}>
+                {/* Header with Search and Filter */}
+                <View style={{ flexDirection: 'row' }}>
+                    <View style={{ flex: 1 }}>
                         <SearchBar />
                     </View>
                     <TouchableOpacity
-                        style={{
-                            padding: 14,
-                            marginLeft: 5,
-                        }}
+                        style={{ padding: 14, marginLeft: 5 }}
                         onPress={() => sheetRef.current.openSheet()}
                     >
                         <Image
@@ -1095,23 +148,20 @@ const Items = ({ route, navigation }) => {
                     </TouchableOpacity>
                 </View>
 
-                <View
-                    style={{
-                        backgroundColor: colors.card,
-                        marginHorizontal: -15,
-                        flexDirection: 'row',
-                        marginTop: 10,
-                        height: 54,
-                        alignItems: 'center',
-                    }}
-                >
+                {/* Sorting and Layout Options */}
+                <View style={{
+                    backgroundColor: colors.card,
+                    marginHorizontal: -15,
+                    flexDirection: 'row',
+                    marginTop: 10,
+                    height: 54,
+                    alignItems: 'center',
+                }}>
                     <View style={{ flex: 1 }}>
                         <ScrollView
                             horizontal
                             showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={{
-                                paddingLeft: 15,
-                            }}
+                            contentContainerStyle={{ paddingLeft: 15 }}
                         >
                             <TouchableOpacity
                                 style={{
@@ -1148,16 +198,10 @@ const Items = ({ route, navigation }) => {
                             </TouchableOpacity>
                         </ScrollView>
                     </View>
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                        }}
-                    >
+                    <View style={{ flexDirection: 'row' }}>
                         <TouchableOpacity
                             onPress={() => handleLayout('grid')}
-                            style={{
-                                padding: 10,
-                            }}
+                            style={{ padding: 10 }}
                         >
                             <Image
                                 style={{
@@ -1171,9 +215,7 @@ const Items = ({ route, navigation }) => {
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => handleLayout('list')}
-                            style={{
-                                padding: 10,
-                            }}
+                            style={{ padding: 10 }}
                         >
                             <Image
                                 style={{
@@ -1187,30 +229,56 @@ const Items = ({ route, navigation }) => {
                         </TouchableOpacity>
                     </View>
                 </View>
-
             </View>
-            <ScrollView showsHorizontalScrollIndicator={false}>
-                <View 
-                    style={[GlobalStyleSheet.container,{
-                        padding:0, 
-                        flexDirection: layout === 'list' ? 'column' : 'row', 
-                        flexWrap: layout === 'list' ? 'nowrap' : 'wrap', 
-                        paddingHorizontal: 10 
-                    }]}
-                >
-                    {Data[cat].map((data, index) => (
-                        <View
-                            key={index}
-                            style={[{ marginBottom: 10 }, layout === 'grid' && [GlobalStyleSheet.col50, { marginBottom: 15 }]]}
-                        >
-                            <CardStyle1
-                                list={layout === 'list' ? true : false}
-                                item={data}
-                            />
-                        </View>
-                    ))}
-                </View>
-            </ScrollView>
+
+            {/* Items List */}
+            <FlatList
+                data={items}
+                key={layout} // Force re-render when layout changes
+                keyExtractor={(item) => item.id.toString()}
+                numColumns={layout === 'grid' ? 2 : 1}
+                contentContainerStyle={[
+                    GlobalStyleSheet.container,
+                    {
+                        padding: 0,
+                        paddingHorizontal: 10
+                    }
+                ]}
+                renderItem={({ item }) => (
+                    <View
+                        style={[
+                            { marginBottom: 10 }, 
+                            layout === 'grid' && [GlobalStyleSheet.col50, { marginBottom: 15 }]
+                        ]}
+                    >
+                        <CardStyle1
+                            list={layout === 'list'}
+                            item={{
+                                id: item.id,
+                                image: item.picture?.url?.medium || IMAGES.placeholder,
+                                title: item.title || 'No title',
+                                price: formatPrice(item.price, item.currency_code) || 'N/A',
+                                location: 'Unknown location',
+                                //location: item.city?.name || 'Unknown location',
+                                trending: item.featured || false
+                            }}
+                            onPress={() => navigation.navigate('AdDetails', { id: item.id })}
+                        />
+                    </View>
+                )}
+                ListFooterComponent={renderFooter}
+                onEndReached={loadMore}
+                onEndReachedThreshold={0.5}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={COLORS.primary}
+                    />
+                }
+            />
+
+            {/* Bottom Sheets */}
             <FilterSheet
                 ref={sheetRef}
                 height={false}
@@ -1222,7 +290,7 @@ const Items = ({ route, navigation }) => {
                 ref={openRef}
             />
         </SafeAreaView>
-    )
-}
+    );
+};
 
 export default Items;

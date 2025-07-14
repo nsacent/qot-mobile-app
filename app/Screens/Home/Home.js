@@ -39,7 +39,8 @@ const HomeScreen = ({ navigation }) => {
       // Fetch latest ads
       const latestResponse = await postsService.posts.getAll({
         perPage: 4,
-        sort: 'newest'
+        sort: 'newest',
+        detailed:1
       });
       setLatestAds(latestResponse.data?.result?.data || []); // Fallback to empty array
 

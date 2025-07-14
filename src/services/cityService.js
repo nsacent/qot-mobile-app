@@ -1,13 +1,9 @@
-// utils/cityService.js
-import axios from 'axios';
+import api from './api';
+import { API_ENDPOINTS } from '../config/api';
 
-const API_BASE_URL = 'https://qot.ug/api';
-const API_TOKEN = 'RFI3M0xVRmZoSDVIeWhUVGQzdXZxTzI4U3llZ0QxQVY=';
-
-// Cache for cities
 let citiesCache = {
   // Default known cities
-  52: { name: 'Kampala' } // From your data, city_id 52 is Kampala
+  55: { name: 'Jinja' } // From your data, city_id 52 is Kampala
 };
 
 // Function to get city details with retry logic
@@ -18,23 +14,12 @@ export const getCityDetails = async (cityId, userToken) => {
   }
 
   try {
-    const headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-AppApiToken': API_TOKEN,
-    };
+    // Add await here and properly structure the API call
 
-    if (userToken) {
-      headers['Authorization'] = `Bearer ${userToken}`;
-    }
+    const response = await api.get(API_ENDPOINTS.CITIES.BY_ID.replace(':id', cityId));
 
-    const response = await axios.get(`${API_BASE_URL}/cities/${cityId}`, {
-      headers,
-      params: { embed: 'country' },
-      timeout: 5000 // 5 second timeout
-    });
-
-    if (response.data.success && response.data.result) {
+    // Access response data directly (assuming your API returns data in this structure)
+    if (response.data && response.data.success && response.data.result) {
       citiesCache[cityId] = response.data.result;
       return response.data.result;
     }
@@ -45,6 +30,7 @@ export const getCityDetails = async (cityId, userToken) => {
   }
 };
 
+// Rest of the code remains the same...
 // Function to get just the city name
 export const getCityName = async (cityId, userToken) => {
   try {
@@ -61,11 +47,11 @@ export const preloadCities = async (userToken) => {
   try {
     // Only preload the cities we know about (like Kampala)
     const knownCityIds = [52]; // Add more IDs if you know them
-    
-    await Promise.all(knownCityIds.map(id => 
+
+    await Promise.all(knownCityIds.map(id =>
       getCityDetails(id, userToken).catch(e => console.warn(`Failed to preload city ${id}:`, e))
     ));
-    
+
     return true;
   } catch (error) {
     console.warn('Error in preloadCities:', error);

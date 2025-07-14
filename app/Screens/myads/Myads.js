@@ -21,6 +21,8 @@ import { AuthContext } from '../../contexts/AuthProvider';
 import { ScrollView } from 'react-native-gesture-handler';
 import MyadsSheet from '../../components/BottomSheet/MyadsSheet';
 import { getCityName, preloadCities } from '../../../src/services/cityService';
+import { ApiService } from '../../../src/services/api';
+import postsService from '../../../src/services/postsService';
 
 const API_BASE_URL = 'https://qot.ug/api';
 
@@ -208,17 +210,22 @@ const Myads = ({ navigation }) => {
 
     const toggleFavorite = async (postId) => {
         try {
-            const headers = getHeaders();
             const isFavorited = favourites.some(item => item.id === postId.toString());
 
             if (isFavorited) {
-                await axios.delete(`${API_BASE_URL}/savedPosts/${postId}`, { headers });
+                //await axios.delete(`${API_BASE_URL}/savedPosts/${postId}`, { headers });
+                await ApiService.unlike(postId);
                 setFavourites(prev => prev.filter(item => item.id !== postId.toString()));
                 setAllFavorites(prev => prev.filter(item => item.id !== postId.toString()));
             } else {
-                const response = await axios.get(`${API_BASE_URL}/posts/${postId}?embed=pictures`, { headers });
+                //const response = await axios.get(`${API_BASE_URL}/posts/${postId}?embed=pictures`, { headers });
+                const response =await postsService.posts.getById(postId,{
+                        sort: 'newest',
+                        detailed:1
+                      });
                 const newFavorite = await processItemsWithCities([response.data.result], userToken);
-                await axios.post(`${API_BASE_URL}/savedPosts`, { post_id: postId }, { headers });
+                //await axios.post(`${API_BASE_URL}/savedPosts`, { post_id: postId }, { headers });
+                await ApiService.unlike({post_id:postId});
                 setFavourites(prev => [...prev, ...newFavorite]);
                 setAllFavorites(prev => [...prev, ...newFavorite]);
             }
@@ -591,6 +598,7 @@ const Myads = ({ navigation }) => {
                 ref={moresheet}
                 onDelete={handleDelete}
             />
+
         </SafeAreaView>
     )
 }
